@@ -1,22 +1,24 @@
 {
-    "configurations": [
-      {
-        "name": "ESP-IDF",
-        "compilerPath": "${config:idf.toolsPath}/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin/riscv32-esp-elf-gcc",
-        "compileCommands": "${config:idf.buildPath}/compile_commands.json",
-        "includePath": [
-          "${config:idf.espIdfPath}/components/**",
-          "${workspaceFolder}/**"
+  "configurations": [
+    {
+      "name": "ESP-IDF",
+      "compilerPath": "${config:idf.toolsPath}/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin/riscv32-esp-elf-gcc",
+      "compileCommands": [
+        "${config:idf.buildPath}/compile_commands.json"
+      ],
+      "includePath": [
+        "${config:idf.espIdfPath}/components/**",
+        "${workspaceFolder}/**",
+        "/home/raxt/Espressif/v5.4.1/esp-idf/components/log/include"
+      ],
+      "browse": {
+        "path": [
+          "${config:idf.espIdfPath}/components",
+          "${workspaceFolder}"
         ],
-        "browse": {
-          "path": [
-            "${config:idf.espIdfPath}/components",
-            "${workspaceFolder}"
-          ],
-          "limitSymbolsToIncludedHeaders": true
-        }
+        "limitSymbolsToIncludedHeaders": true
       }
-    ],
-    "version": 4
-  }
-  
+    }
+  ],
+  "version": 4
+}
