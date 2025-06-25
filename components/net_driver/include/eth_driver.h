@@ -1,6 +1,20 @@
 #ifndef ETH_DRIVER_H
 #define ETH_DRIVER_H
 
+/**
+ * @file eth_driver.h
+ * @brief Header file for the Ethernet driver component.
+ * @details This file contains the declaration of the function used to initialize the Ethernet driver.
+ * 
+ * @author  Roberto Axt
+ * @date    2025-06-24
+ * @version 0.0
+ *
+ * @par License
+ * This project is licensed under the MIT License.
+ */
+    
+#include "esp_err.h"    
 #include "esp_eth_driver.h"
 
 /**

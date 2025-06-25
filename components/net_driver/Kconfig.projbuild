@@ -84,21 +84,6 @@ menu "Example Ethernet Configuration"
             help
                 Set the GPIO number used by SPI CS0, i.e. Chip Select associated with the first SPI Eth module).
 
-        config ETH_SPI_CS1_GPIO
-            depends on SPI_ETHERNETS_NUM > 1
-            int "SPI CS1 GPIO number for SPI Ethernet module #2"
-            range ENV_GPIO_RANGE_MIN ENV_GPIO_OUT_RANGE_MAX
-            default 32 if IDF_TARGET_ESP32
-            default 7 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
-            default 8 if IDF_TARGET_ESP32C3
-            default 21 if IDF_TARGET_ESP32C6
-            default 3 if IDF_TARGET_ESP32C2
-            default 11 if IDF_TARGET_ESP32H2
-            default 23 if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32C61
-            default 1 if IDF_TARGET_ESP32C5
-            help
-                Set the GPIO number used by SPI CS1, i.e. Chip Select associated with the second SPI Eth module.
-
         config ETH_SPI_INT0_GPIO
             int "Interrupt GPIO number SPI Ethernet module #1"
             range -1 ENV_GPIO_IN_RANGE_MAX
@@ -111,30 +96,9 @@ menu "Example Ethernet Configuration"
                 Set the GPIO number used by the first SPI Ethernet module interrupt line.
                 Set -1 to use SPI Ethernet module in polling mode.
 
-        config ETH_SPI_INT1_GPIO
-            depends on SPI_ETHERNETS_NUM > 1
-            int "Interrupt GPIO number SPI Ethernet module #2"
-            range -1 ENV_GPIO_IN_RANGE_MAX
-            default 33 if IDF_TARGET_ESP32
-            default 5 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C2
-            default 5 if IDF_TARGET_ESP32C6 || IDF_TARGET_ESP32C5
-            default 9 if IDF_TARGET_ESP32H2
-            default 47 if IDF_TARGET_ESP32P4
-            default 1 if IDF_TARGET_ESP32C61
-            help
-                Set the GPIO number used by the second SPI Ethernet module interrupt line.
-                Set -1 to use SPI Ethernet module in polling mode.
-
-        config ETH_SPI_POLLING0_MS_VAL
+         config ETH_SPI_POLLING0_MS_VAL
             depends on ETH_SPI_INT0_GPIO < 0
             int "Polling period in msec of SPI Ethernet Module #1"
-            default 10
-            help
-                Set SPI Ethernet module polling period.
-
-        config ETH_SPI_POLLING1_MS_VAL
-            depends on SPI_ETHERNETS_NUM > 1 && ETH_SPI_INT1_GPIO < 0
-            int "Polling period in msec of SPI Ethernet Module #2"
             default 10
             help
                 Set SPI Ethernet module polling period.
@@ -146,29 +110,12 @@ menu "Example Ethernet Configuration"
             default ETH_SPI_POLLING0_MS_VAL if ETH_SPI_POLLING0_MS_VAL > 0
             default 0
 
-        # Hidden variable to ensure that polling period option is visible only when interrupt is set disabled and
-        # it is set to known value (0) when interrupt is enabled at the same time.
-        config ETH_SPI_POLLING1_MS
-            depends on SPI_ETHERNETS_NUM > 1
-            int
-            default ETH_SPI_POLLING1_MS_VAL if ETH_SPI_POLLING1_MS_VAL > 0
-            default 0
-
         config ETH_SPI_PHY_RST0_GPIO
             int "PHY Reset GPIO number of SPI Ethernet Module #1"
             range -1 ENV_GPIO_OUT_RANGE_MAX
             default -1
             help
                 Set the GPIO number used to reset PHY chip on the first SPI Ethernet module.
-                Set to -1 to disable PHY chip hardware reset.
-
-        config ETH_SPI_PHY_RST1_GPIO
-            depends on SPI_ETHERNETS_NUM > 1
-            int "PHY Reset GPIO number of SPI Ethernet Module #2"
-            range -1 ENV_GPIO_OUT_RANGE_MAX
-            default -1
-            help
-                Set the GPIO number used to reset PHY chip on the second SPI Ethernet module.
                 Set to -1 to disable PHY chip hardware reset.
 
         config ETH_SPI_PHY_ADDR0
@@ -178,12 +125,5 @@ menu "Example Ethernet Configuration"
             help
                 Set the first SPI Ethernet module PHY address according your board schematic.
 
-        config ETH_SPI_PHY_ADDR1
-            depends on SPI_ETHERNETS_NUM > 1
-            int "PHY Address of SPI Ethernet Module #2"
-            range 0 31
-            default 1
-            help
-                Set the second SPI Ethernet module PHY address according your board schematic.
     endif # USE_SPI_ETHERNET
 endmenu

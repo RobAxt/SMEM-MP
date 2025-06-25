@@ -1,9 +1,6 @@
 #ifndef NET_DRIVER_H
 #define NET_DRIVER_H
 
-#include "esp_err.h"
-#include "esp_netif_ip_addr.h"
-
 /**
  * @file net_driver.h
  * @brief Header file for the network driver component.
@@ -15,8 +12,10 @@
  *
  * @par License
  * This project is licensed under the MIT License.
-
 */
+
+#include "esp_err.h"
+#include "esp_netif_ip_addr.h"
 
 /**
  * @brief Start the network interface with the specified IP, gateway, and mask.
@@ -27,7 +26,7 @@
  * 
  * @return esp_err_t Returns ESP_OK on success, or an error code on failure.
  */
-esp_err_t esp_net_start(void);
+esp_err_t esp_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mask);
 
 /**
  * @brief Wait until the network interface is ready.

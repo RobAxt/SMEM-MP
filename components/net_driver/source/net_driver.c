@@ -9,15 +9,13 @@
 #include "net_driver.h"
 #include "eth_driver.h"
 
-
 static const char *TAG = "net_driver";
 static SemaphoreHandle_t net_ready_smph = NULL;
-
 
 static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 static void got_ip_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
-esp_err_t esp_net_start(void)
+esp_err_t esp_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mask)
 {
     esp_err_t ret = ESP_OK;
     esp_eth_handle_t eth_handles = NULL;
@@ -35,18 +33,18 @@ esp_err_t esp_net_start(void)
     ESP_ERROR_CHECK(esp_event_loop_create_default());   
     
     // Create instance of esp-netif for Ethernet
-    // Use ESP_NETIF_DEFAULT_ETH when just one Ethernet interface is used and you don't need to modify
-    // default esp-netif configuration parameters.
+    // Use ESP_NETIF_DEFAULT_ETH when you don't need to modify default esp-netif configuration parameters.
     esp_netif_config_t cfg = ESP_NETIF_DEFAULT_ETH();
     esp_netif_t *eth_netifs = esp_netif_new(&cfg);
 
-    ESP_ERROR_CHECK(esp_netif_dhcpc_stop(eth_netifs)); // Stop DHCP client if it was started by default
+    // Stop DHCP client if it was started by default
+    ESP_ERROR_CHECK(esp_netif_dhcpc_stop(eth_netifs));
     
     // Set static IP address for Ethernet interface
     esp_netif_ip_info_t ip_info = {
-        .ip = { ESP_IP4TOADDR(192, 168, 160, 2) }, // Set  static IP address
-        .netmask = { ESP_IP4TOADDR(255, 255, 255, 0) }, // Set netmask
-        .gw = { ESP_IP4TOADDR(192, 168, 160, 1) } // Set default gateway
+        .ip      = ip ,   // Set  static IP address
+        .netmask = mask , // Set netmask
+        .gw      = gw     // Set default gateway
     };
     ESP_ERROR_CHECK(esp_netif_set_ip_info(eth_netifs, &ip_info));
 
@@ -63,7 +61,6 @@ esp_err_t esp_net_start(void)
     return ret;
 }
 
-/** @brief Event handler for Ethernet events. **/
 esp_err_t esp_net_ready(void)
 {
     xSemaphoreTake(net_ready_smph, portMAX_DELAY); // Wait until the semaphore is given

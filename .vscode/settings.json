@@ -21,7 +21,10 @@
     "esp_eth_driver.h": "c",
     "eth_driver.h": "c",
     "esp_eth_mac_spi.h": "c",
-    "sdkconfig.h": "c"
+    "sdkconfig.h": "c",
+    "cstdint": "c",
+    "internet": "cpp",
+    "netfwd": "cpp"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }

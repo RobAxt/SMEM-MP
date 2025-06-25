@@ -75,7 +75,7 @@ static esp_err_t spi_bus_init(void)
 {
     esp_err_t ret = ESP_OK;
 
-#if (CONFIG_EXAMPLE_ETH_SPI_INT0_GPIO >= 0) || (CONFIG_EXAMPLE_ETH_SPI_INT1_GPIO > 0)
+#if (CONFIG_ETH_SPI_INT0_GPIO >= 0)
     // Install GPIO ISR handler to be able to service SPI Eth modules interrupts
     ret = gpio_install_isr_service(0);
     if (ret == ESP_OK) {
