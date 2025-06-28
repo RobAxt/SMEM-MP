@@ -25,7 +25,14 @@
     "cstdint": "c",
     "internet": "cpp",
     "netfwd": "cpp",
-    "esp_netif_ip_addr.h": "c"
+    "esp_netif_ip_addr.h": "c",
+    "mqtt_client.h": "c",
+    "esp_transport.h": "c",
+    "task.h": "c",
+    "esp_event.h": "c",
+    "mqtt_driver.h": "c",
+    "esp_system.h": "c",
+    "esp_err.h": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0",
   "git.ignoreLimitWarning": true
