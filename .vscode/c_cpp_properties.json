@@ -8,8 +8,7 @@
       ],
       "includePath": [
         "${config:idf.espIdfPath}/components/**",
-        "${workspaceFolder}/**",
-        "/home/raxt/Espressif/v5.4.1/esp-idf/components/log/include"
+        "${workspaceFolder}/**"
       ],
       "browse": {
         "path": [

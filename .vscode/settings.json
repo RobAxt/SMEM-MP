@@ -24,7 +24,9 @@
     "sdkconfig.h": "c",
     "cstdint": "c",
     "internet": "cpp",
-    "netfwd": "cpp"
+    "netfwd": "cpp",
+    "esp_netif_ip_addr.h": "c"
   },
-  "idf.monitorPort": "/dev/ttyUSB0"
+  "idf.monitorPort": "/dev/ttyUSB0",
+  "git.ignoreLimitWarning": true
 }
