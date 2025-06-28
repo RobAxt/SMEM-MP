@@ -5,7 +5,7 @@
 
 #include "net_driver.h"
 
-static const char *TAG = "SMEM-MP";
+static const char *TAG = "app_main";
 
 void app_main(void)
 {
@@ -17,6 +17,7 @@ void app_main(void)
     
     esp_net_start(ip, gw, mask);
 
+    esp_net_ready();
     esp_net_ready();
 
     ESP_LOGI(TAG, "Ending app_main function");
