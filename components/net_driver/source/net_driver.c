@@ -114,6 +114,6 @@ void got_ip_event_handler(void *arg, esp_event_base_t event_base,
  // const esp_netif_ip_info_t *ip_info = &event->ip_info;
 
     ESP_LOGI(TAG, "Ethernet Got IP Address");
-    if(net_ready_smph != NULL))
+    if(net_ready_smph != NULL)
         xSemaphoreGive(net_ready_smph);
 }
