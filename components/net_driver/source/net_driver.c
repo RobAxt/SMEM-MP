@@ -1,6 +1,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/semphr.h"
+#include "freertos/event_groups.h"
 #include "esp_netif.h"
 #include "esp_eth.h"
 #include "esp_event.h"
@@ -10,7 +10,8 @@
 #include "eth_driver.h"
 
 static const char *TAG = "net_driver";
-static SemaphoreHandle_t net_ready_smph = NULL;
+static EventGroupHandle_t net_event_group = NULL;
+#define NET_READY_BIT BIT0
 
 static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 static void got_ip_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
@@ -19,43 +20,39 @@ esp_err_t esp_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mas
 {
     esp_err_t ret = ESP_OK;
     esp_eth_handle_t eth_handles = NULL;
-    net_ready_smph = xSemaphoreCreateBinary();
-    if (net_ready_smph == NULL) { 
-        ESP_LOGE(TAG, "Error al crear el semáforo binario");
-        return ESP_FAIL;
+
+    if (net_event_group == NULL) {
+        net_event_group = xEventGroupCreate();
+        if (net_event_group == NULL) {
+            ESP_LOGE(TAG, "Error al crear el grupo de eventos");
+            return ESP_FAIL;
+        }
+    } else {
+        // Limpiar cualquier bit previo (por reinicio de interfaz)
+        xEventGroupClearBits(net_event_group, NET_READY_BIT);
     }
 
-    // Initialize Ethernet driver
+    // Inicializar Ethernet y pila TCP/IP
     ESP_ERROR_CHECK(esp_eth_init(&eth_handles));
-    // Initialize TCP/IP network interface aka the esp-netif (should be called only once in application)
     ESP_ERROR_CHECK(esp_netif_init());
-    // Create default event loop that running in background
-    ESP_ERROR_CHECK(esp_event_loop_create_default());   
-    
-    // Create instance of esp-netif for Ethernet
-    // Use ESP_NETIF_DEFAULT_ETH when you don't need to modify default esp-netif configuration parameters.
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
     esp_netif_config_t cfg = ESP_NETIF_DEFAULT_ETH();
     esp_netif_t *eth_netifs = esp_netif_new(&cfg);
 
-    // Stop DHCP client if it was started by default
     ESP_ERROR_CHECK(esp_netif_dhcpc_stop(eth_netifs));
-    
-    // Set static IP address for Ethernet interface
+
     esp_netif_ip_info_t ip_info = {
-        .ip      = ip ,   // Set  static IP address
-        .netmask = mask , // Set netmask
-        .gw      = gw     // Set default gateway
+        .ip      = ip,
+        .netmask = mask,
+        .gw      = gw
     };
     ESP_ERROR_CHECK(esp_netif_set_ip_info(eth_netifs, &ip_info));
-
-    // Attach Ethernet driver to TCP/IP stack
     ESP_ERROR_CHECK(esp_netif_attach(eth_netifs, esp_eth_new_netif_glue(eth_handles)));
 
-    // Register user defined event handers
     ESP_ERROR_CHECK(esp_event_handler_register(ETH_EVENT, ESP_EVENT_ANY_ID, &eth_event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &got_ip_event_handler, NULL));
 
-    // Start Ethernet driver state machine
     ESP_ERROR_CHECK(esp_eth_start(eth_handles));
 
     return ret;
@@ -63,22 +60,25 @@ esp_err_t esp_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mas
 
 esp_err_t esp_net_ready(void)
 {
-    xSemaphoreTake(net_ready_smph, portMAX_DELAY); // Wait until the semaphore is given
-    if (net_ready_smph != NULL) {
-        vSemaphoreDelete(net_ready_smph); // Delete the semaphore after use
-        net_ready_smph = NULL; // Set to NULL to avoid dangling pointer
+    EventBits_t bits = xEventGroupWaitBits(net_event_group,
+                                           NET_READY_BIT,
+                                           pdFALSE,      // No limpiar el bit
+                                           pdTRUE,       // Esperar todos los bits
+                                           portMAX_DELAY);
+    if (bits & NET_READY_BIT) {
+        ESP_LOGI(TAG, "Network is ready");
+        return ESP_OK;
     }
-    ESP_LOGI(TAG, "Network is ready");
-    return ESP_OK;
+
+    ESP_LOGE(TAG, "Error esperando el bit de red");
+    return ESP_FAIL;
 }
 
-/** @brief Event handler for IP_EVENT_ETH_GOT_IP **/
 static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     uint8_t mac_addr[6] = {0};
     eth_speed_t speed = ETH_SPEED_MAX;
     eth_duplex_t duplex = -1;
-    /* we can get the ethernet driver handle from event data */
     esp_eth_handle_t eth_handle = *(esp_eth_handle_t *)event_data;
 
     switch (event_id) {
@@ -88,13 +88,16 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t ev
         esp_eth_ioctl(eth_handle, ETH_CMD_G_DUPLEX_MODE, &duplex);
 
         ESP_LOGI(TAG, "Ethernet Link Up %s - %s",
-                                speed == ETH_SPEED_100M ? "100 Mbps" : "10 Mbps",
-                                duplex == ETH_DUPLEX_FULL ? "Full Duplex" : "Half Duplex" );
+                 speed == ETH_SPEED_100M ? "100 Mbps" : "10 Mbps",
+                 duplex == ETH_DUPLEX_FULL ? "Full Duplex" : "Half Duplex");
         ESP_LOGI(TAG, "Ethernet HW Addr %02x:%02x:%02x:%02x:%02x:%02x",
-                 mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+                 mac_addr[0], mac_addr[1], mac_addr[2],
+                 mac_addr[3], mac_addr[4], mac_addr[5]);
         break;
     case ETHERNET_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "Ethernet Link Down");
+        // Podés limpiar el bit aquí si querés detectar reconexiones
+        xEventGroupClearBits(net_event_group, NET_READY_BIT);
         break;
     case ETHERNET_EVENT_START:
         ESP_LOGI(TAG, "Ethernet Started");
@@ -107,13 +110,8 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t ev
     }
 }
 
-void got_ip_event_handler(void *arg, esp_event_base_t event_base,
-                                 int32_t event_id, void *event_data)
+static void got_ip_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
- // ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
- // const esp_netif_ip_info_t *ip_info = &event->ip_info;
-
     ESP_LOGI(TAG, "Ethernet Got IP Address");
-    if(net_ready_smph != NULL)
-        xSemaphoreGive(net_ready_smph);
+    xEventGroupSetBits(net_event_group, NET_READY_BIT);
 }
