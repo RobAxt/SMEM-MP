@@ -20,9 +20,9 @@ void app_main(void)
 
     ESP_ERROR_CHECK(nvs_flash_init());
 
-    ESP_ERROR_CHECK(esp_net_start(ip, gw, mask));
+    ESP_ERROR_CHECK(eth_net_start(ip, gw, mask));
 
-    ESP_ERROR_CHECK(esp_net_ready());
+    ESP_ERROR_CHECK(eth_net_ready());
     
     ESP_ERROR_CHECK(sntp_client_start(ntp));
 

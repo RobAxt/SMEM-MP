@@ -16,7 +16,7 @@ static EventGroupHandle_t net_event_group = NULL;
 static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 static void got_ip_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
-esp_err_t esp_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mask)
+esp_err_t eth_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mask)
 {
     esp_err_t ret = ESP_OK;
     esp_eth_handle_t eth_handles = NULL;
@@ -58,7 +58,7 @@ esp_err_t esp_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mas
     return ret;
 }
 
-esp_err_t esp_net_ready(void)
+esp_err_t eth_net_ready(void)
 {
     EventBits_t bits = xEventGroupWaitBits(net_event_group,
                                            NET_READY_BIT,
