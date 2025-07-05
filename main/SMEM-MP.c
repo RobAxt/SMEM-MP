@@ -15,10 +15,9 @@ void app_main(void)
     esp_ip4_addr_t gw = { .addr = ESP_IP4TOADDR(192, 168, 160, 1) };
     esp_ip4_addr_t mask = { .addr = ESP_IP4TOADDR(255, 255, 255, 0) };
     
-    esp_net_start(ip, gw, mask);
+    eth_net_start(ip, gw, mask);
 
-    esp_net_ready();
-    esp_net_ready();
+    eth_net_ready();
 
     ESP_LOGI(TAG, "Ending app_main function");
 }
