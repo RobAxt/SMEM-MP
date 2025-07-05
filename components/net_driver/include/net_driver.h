@@ -26,7 +26,7 @@
  * 
  * @return esp_err_t Returns ESP_OK on success, or an error code on failure.
  */
-esp_err_t esp_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mask);
+esp_err_t eth_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mask);
 
 /**
  * @brief Wait until the network interface is ready.
@@ -37,6 +37,6 @@ esp_err_t esp_net_start(esp_ip4_addr_t ip, esp_ip4_addr_t gw, esp_ip4_addr_t mas
  * 
  * @note This function should be called after esp_net_start() to ensure that the network interface is fully initialized.
  */
-esp_err_t esp_net_ready(void);
+esp_err_t eth_net_ready(void);
 
 #endif // NET_DRIVER_H

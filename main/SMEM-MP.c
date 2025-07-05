@@ -25,8 +25,8 @@ void app_main(void)
     
     ESP_ERROR_CHECK(nvs_flash_init());
 
-    esp_net_start(ip, gw, mask);
-    esp_net_ready();
+    ESP_ERROR_CHECK(eth_net_start(ip, gw, mask));
+    ESP_ERROR_CHECK(eth_net_ready());
 
     mqtt_client_start();
     mqtt_client_publish(TOPIC, "Hello, MQTT!", 0);
