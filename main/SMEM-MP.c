@@ -1,20 +1,13 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
-#include "esp_netif_ip_addr.h"
+#include "esp_netif.h"
 
 #include "net_driver.h"
 #include "sntp_driver.h"
 #include "mqtt_driver.h"
+#include "time_publisher.h"
 
 static const char *TAG = "app_main";
-
-static const char *TOPIC = "test/topic";
-
-static void mqtt_handler(const char *topic, const char *payload) {
-    ESP_LOGI(TAG, "Message received: %s", payload);
-}
 
 void app_main(void)
 {
@@ -34,18 +27,9 @@ void app_main(void)
     
     ESP_ERROR_CHECK(sntp_client_start(ntp));
 
-    char datetime_string[ISO_TIMESTAMP_SIZE];
-    esp_err_t err = sntp_client_isotime(datetime_string, sizeof(datetime_string));
-    
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to get current time: %s", esp_err_to_name(err));
-    } else {
-        ESP_LOGI(TAG, "Current time: %s", datetime_string);
-    }
-
     ESP_ERROR_CHECK(mqtt_client_start(broker));
 
-    mqtt_client_publish(TOPIC, "Hello, MQTT!", 0);
-    mqtt_client_suscribe(TOPIC, mqtt_handler, 0);
+    ESP_ERROR_CHECK(time_publisher_start());
+
     ESP_LOGI(TAG, "Ending app_main function");
 }

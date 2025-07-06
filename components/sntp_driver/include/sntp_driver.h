@@ -15,7 +15,7 @@
  */
 
 #include "esp_err.h"
-#include "esp_netif_ip_addr.h"
+#include "esp_netif.h"
 
 #define TIMESTAMP_STRING_SIZE 64  // Example  Sat Jul  5 20:06:30 2025
 #define ISO_TIMESTAMP_SIZE    25  // "YYYY-MM-DDTHH:MM:SSZ" + null terminator

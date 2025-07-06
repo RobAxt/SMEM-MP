@@ -7,6 +7,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/semphr.h"
 #include "esp_log.h"
 #include "mqtt_client.h"
 #include "lwip/ip4_addr.h"
@@ -15,6 +16,7 @@
 
 #include "mqtt_driver.h"
 
+#define MAX_TASK_PRIORITY 24 // Maximum priority for the MQTT task
 #define MIN_URI_SIZE 32 // Minimum size for "mqtt://
 #define MAX_IP_SIZE  16 // Maximum size for an IPv4 address string
 
@@ -29,6 +31,7 @@ typedef struct {
 
 static QueueHandle_t mqtt_publish_queue = NULL;
 static TaskHandle_t mqtt_publisher_task_handle = NULL;
+static SemaphoreHandle_t mqtt_handlers_mutex = NULL;
 
 // Data structure for MQTT message handlers
 typedef struct {
@@ -85,12 +88,16 @@ esp_err_t mqtt_client_start(esp_ip4_addr_t broker)
         return ret;
     }
 
+    mqtt_handlers_mutex = xSemaphoreCreateMutex();
+    assert(mqtt_handlers_mutex != NULL);
+    xSemaphoreGive(mqtt_handlers_mutex);
+
     mqtt_publish_queue = xQueueCreate(MAX_PUBLISH_MSG, sizeof(mqtt_publish_msg_t));
     if (mqtt_publish_queue == NULL) {
         ESP_LOGE(TAG, "Error to create MQTT publish queue");
         return ESP_ERR_NO_MEM;
     }
-    BaseType_t result = xTaskCreate(mqtt_publisher_task, "mqtt_pub_task", 4096, NULL, 5, &mqtt_publisher_task_handle);
+    BaseType_t result = xTaskCreate(mqtt_publisher_task, "mqtt_pub_task", 4096, NULL, MAX_TASK_PRIORITY, &mqtt_publisher_task_handle);
     if (result != pdPASS) {
         ESP_LOGE(TAG, "Failed to create MQTT publisher task");
         vQueueDelete(mqtt_publish_queue);
@@ -120,30 +127,32 @@ esp_err_t mqtt_client_publish(const char *topic, const char *payload, int qos)
     return ESP_OK;
 }
 
-esp_err_t mqtt_client_suscribe(const char *topic, mqtt_msg_handler_t handler, int qos)
+esp_err_t mqtt_client_subscribe(const char *topic, mqtt_msg_handler_t handler, int qos)
 {
     for (int i = 0; i < MAX_SUBSCRIBE_MSG; ++i)
     {
         if (mqtt_handlers[i].handler == NULL) 
         {
+            xSemaphoreTake(mqtt_handlers_mutex, portMAX_DELAY);
             strncpy(mqtt_handlers[i].topic, topic, sizeof(mqtt_handlers[i].topic) - 1);
             mqtt_handlers[i].handler = handler;
             mqtt_handlers[i].qos = qos;
-
+            
             ESP_LOGI(TAG, "Handler register for topic: %s", topic);
-
+            
             if (mqtt_connected)
             {
                 int msg_id = esp_mqtt_client_subscribe(client, topic, qos);
-                ESP_LOGI(TAG, "Subscribed to topic: %s, msg_id=%d", topic, msg_id);
+                ESP_LOGI(TAG, "Subscribed to topic(1): %s, msg_id=%d", topic, msg_id);
             }
             else
             {                
                 ESP_LOGW(TAG, "MQTT not connected, deferring subscription for topic: %s", topic);
             }
-
+            xSemaphoreGive(mqtt_handlers_mutex);
             return ESP_OK;
         }
+        
     }
     return ESP_ERR_NO_MEM;
 }
@@ -190,8 +199,12 @@ static void mqtt_publisher_task(void *arg) {
             if(mqtt_connected)
             {
                 xQueueReceive(mqtt_publish_queue, &msg, portMAX_DELAY);
+                
                 esp_mqtt_client_publish(client, msg.topic, msg.payload, 0, msg.qos, 0);
                 ESP_LOGI(TAG, "Message sent with topic: %s", msg.topic);
+
+                UBaseType_t items_in_queue = uxQueueMessagesWaiting(mqtt_publish_queue);
+                ESP_LOGI(TAG, "Queue size: %u", (unsigned int)items_in_queue);
             }
             else
             {
@@ -218,6 +231,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     switch (event_id) {
         case MQTT_EVENT_CONNECTED:
+            xSemaphoreTake(mqtt_handlers_mutex, portMAX_DELAY);
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             mqtt_connected = true;
             for (int i = 0; i < MAX_SUBSCRIBE_MSG; ++i)
@@ -225,9 +239,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 if (mqtt_handlers[i].handler != NULL)
                 {
                     int msg_id = esp_mqtt_client_subscribe(client, mqtt_handlers[i].topic, mqtt_handlers[i].qos);
-                    ESP_LOGI(TAG, "Subscribed to topic: %s, msg_id=%d", mqtt_handlers[i].topic, msg_id);
+                    ESP_LOGI(TAG, "Subscribed to topic(2): %s, msg_id=%d", mqtt_handlers[i].topic, msg_id);
                 }
+                
             }
+            xSemaphoreGive(mqtt_handlers_mutex);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
