@@ -1,0 +1,14 @@
+menu "SNTP Configuration"
+
+    config SNTP_TIME_SERVER
+        string "SNTP server name"
+        default "192.168.160.1"
+        help
+            Hostname of the main SNTP server.
+    config SNTP_RETRY_TIMEOUT_MS
+        int "SNTP wait timeout (ms)"
+        default 2000
+    config SNTP_RETRY_COUNT
+        int "SNTP max retry attempts"
+        default 10
+endmenu
