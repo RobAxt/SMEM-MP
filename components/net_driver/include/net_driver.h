@@ -15,7 +15,7 @@
 */
 
 #include "esp_err.h"
-#include "esp_netif_ip_addr.h"
+#include "esp_netif.h"
 
 /**
  * @brief Start the network interface with the specified IP, gateway, and mask.
