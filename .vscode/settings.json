@@ -32,7 +32,8 @@
     "esp_event.h": "c",
     "mqtt_driver.h": "c",
     "esp_system.h": "c",
-    "esp_err.h": "c"
+    "esp_err.h": "c",
+    "type_traits": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0",
   "git.ignoreLimitWarning": true

@@ -591,7 +591,7 @@ CONFIG_MQTT_RECONNECT_TIMEOUT_MS=5000
 # end of MQTT Client Configuration
 
 #
-# Example Ethernet Configuration
+# Ethernet Configuration
 #
 CONFIG_ETH_SPI_HOST=1
 CONFIG_ETH_SPI_SCLK_GPIO=6

@@ -9,9 +9,14 @@
 #include "freertos/queue.h"
 #include "esp_log.h"
 #include "mqtt_client.h"
+#include "lwip/ip4_addr.h"
+#include "lwip/inet.h"
 #include "sdkconfig.h"
 
 #include "mqtt_driver.h"
+
+#define MIN_URI_SIZE 32 // Minimum size for "mqtt://
+#define MAX_IP_SIZE  16 // Maximum size for an IPv4 address string
 
 static const char *TAG = "mqtt_driver";
 
@@ -40,16 +45,25 @@ static esp_mqtt_client_handle_t client = NULL;
 
 static void mqtt_publisher_task(void *arg);
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+static esp_err_t esp_ip4_to_mqtt_uri(const esp_ip4_addr_t *ip, char *uri_buf, size_t buf_size);
 
-esp_err_t mqtt_client_start(void)
+
+esp_err_t mqtt_client_start(esp_ip4_addr_t broker)
 {
+    char mqtt_uri[MIN_URI_SIZE];
+
     if (client != NULL) {
         ESP_LOGE(TAG, "MQTT client already started");
         return ESP_ERR_INVALID_STATE;
     }
 
+    if (esp_ip4_to_mqtt_uri(&broker, mqtt_uri, sizeof(mqtt_uri)) == ESP_OK)
+    {
+        ESP_LOGI(TAG, "Broker URI: %s", mqtt_uri);
+    }
+
     esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = CONFIG_BROKER_URL,
+        .broker.address.uri = mqtt_uri,
         .broker.address.port = CONFIG_BROKER_PORT,
         .credentials.username = CONFIG_BROKER_USERNAME,
         .credentials.client_id = CONFIG_BROKER_CLIENT_ID,
@@ -132,6 +146,30 @@ esp_err_t mqtt_client_suscribe(const char *topic, mqtt_msg_handler_t handler, in
         }
     }
     return ESP_ERR_NO_MEM;
+}
+
+/**
+ * @brief Convert an IPv4 address to an MQTT URI format
+ *
+ * This function converts an IPv4 address to a string in the format "mqtt://<ip_address>/"
+ * and stores it in the provided buffer.
+ *
+ * @param ip Pointer to the IPv4 address structure
+ * @param uri_buf Buffer to store the resulting URI string
+ * @param buf_size Size of the buffer
+ * @return ESP_OK on success, or an error code on failure
+ */
+static esp_err_t esp_ip4_to_mqtt_uri(const esp_ip4_addr_t *ip, char *uri_buf, size_t buf_size)
+{
+    if (!ip || !uri_buf || buf_size < MIN_URI_SIZE) 
+        return ESP_ERR_INVALID_ARG;
+
+    char ip_str[MAX_IP_SIZE];
+    if (!ip4addr_ntoa_r((const ip4_addr_t *)ip, ip_str, sizeof(ip_str))) 
+        return ESP_FAIL;
+
+    snprintf(uri_buf, buf_size, "mqtt://%s/", ip_str);
+    return ESP_OK;
 }
 
 /**
