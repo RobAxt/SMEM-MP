@@ -38,6 +38,7 @@ typedef struct {
     char topic[MAX_TOPIC_SIZE];
     int qos;
     mqtt_msg_handler_t handler;
+    int msg_id;
 } mqtt_topic_handler_t;
 
 static mqtt_topic_handler_t mqtt_handlers[MAX_SUBSCRIBE_MSG] = {0};
@@ -137,13 +138,14 @@ esp_err_t mqtt_client_subscribe(const char *topic, mqtt_msg_handler_t handler, i
             strncpy(mqtt_handlers[i].topic, topic, sizeof(mqtt_handlers[i].topic) - 1);
             mqtt_handlers[i].handler = handler;
             mqtt_handlers[i].qos = qos;
+            mqtt_handlers[i].msg_id = 0;
             
             ESP_LOGI(TAG, "Handler register for topic: %s", topic);
             
             if (mqtt_connected)
             {
-                int msg_id = esp_mqtt_client_subscribe(client, topic, qos);
-                ESP_LOGI(TAG, "Subscribed to topic(1): %s, msg_id=%d", topic, msg_id);
+                mqtt_handlers[i].msg_id  = esp_mqtt_client_subscribe(client, topic, qos);
+                ESP_LOGI(TAG, "Subscribed to topic[%d]: %s, msg_id=%d", i, topic, mqtt_handlers[i].msg_id );
             }
             else
             {                
@@ -236,18 +238,19 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             mqtt_connected = true;
             for (int i = 0; i < MAX_SUBSCRIBE_MSG; ++i)
             {
-                if (mqtt_handlers[i].handler != NULL)
+                if (mqtt_handlers[i].handler != NULL && mqtt_handlers[i].msg_id <= 0)
                 {
-                    int msg_id = esp_mqtt_client_subscribe(client, mqtt_handlers[i].topic, mqtt_handlers[i].qos);
-                    ESP_LOGI(TAG, "Subscribed to topic(2): %s, msg_id=%d", mqtt_handlers[i].topic, msg_id);
+                    mqtt_handlers[i].msg_id  = esp_mqtt_client_subscribe(client, mqtt_handlers[i].topic, mqtt_handlers[i].qos);
+                    ESP_LOGI(TAG, "Subscribed to topic(%d): %s, msg_id=%d", i, mqtt_handlers[i].topic, mqtt_handlers[i].msg_id );
                 }
-                
             }
             xSemaphoreGive(mqtt_handlers_mutex);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
             mqtt_connected = false;
+            for (int i = 0; i < MAX_SUBSCRIBE_MSG; ++i)
+                mqtt_handlers[i].msg_id = 0; // Reset msg_id on disconnect
             break;
         case MQTT_EVENT_SUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", (int)event->msg_id);
@@ -259,7 +262,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", (int)event->msg_id);
             break;
         case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "Message received with topic: %.*s", event->topic_len, event->topic);
+            ESP_LOGD(TAG, "Message received with topic: %.*s", event->topic_len, event->topic);
 
             for (int i = 0; i < MAX_SUBSCRIBE_MSG; ++i)
             {
