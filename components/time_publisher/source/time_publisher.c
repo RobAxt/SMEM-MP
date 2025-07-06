@@ -27,8 +27,9 @@ static void time_publisher_task(void *arg)
         if (sntp_client_isotime(time_str, sizeof(time_str)) == ESP_OK)
         {
             snprintf(json_buf, sizeof(json_buf), "{\"timestamp\":\"%s\"}", time_str);
+            ESP_LOGI(TAG, "Publish: %s", json_buf);
             mqtt_client_publish(TOPIC, json_buf, 0);
-            ESP_LOGI(TAG, "Published: %s", json_buf);
+            
         }
         else
         {

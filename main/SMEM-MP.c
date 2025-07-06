@@ -30,6 +30,10 @@ void app_main(void)
     ESP_ERROR_CHECK(mqtt_client_start(broker));
 
     ESP_ERROR_CHECK(time_publisher_start());
-
+    ESP_LOGI(TAG, "Size of signed int: %d",sizeof(signed int));
+    ESP_LOGI(TAG, "Size of unsigned int8_t: %d",sizeof(uint8_t));
+    ESP_LOGI(TAG, "Size of unsigned int: %d",sizeof(unsigned int));
+    ESP_LOGI(TAG, "Size of signed long: %d",sizeof(signed long));
+    ESP_LOGI(TAG, "Size of unsigned long: %d",sizeof(unsigned long));
     ESP_LOGI(TAG, "Ending app_main function");
 }
