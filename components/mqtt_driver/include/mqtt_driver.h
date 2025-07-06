@@ -15,7 +15,7 @@
  */ 
 
 #include "esp_err.h"
-#include "esp_netif_ip_addr.h"
+#include "esp_netif.h"
 
 // Define the maximum number of MQTT messages that can be published at the same time
 #define MAX_PUBLISH_MSG 10
@@ -73,7 +73,7 @@ esp_err_t mqtt_client_publish(const char *topic, const char *payload, int qos);
  *          - ESP_ERR_INVALID_ARG if the topic or handler is NULL
  *          - ESP_FAIL on any other failure
  **/
-esp_err_t mqtt_client_suscribe(const char *topic, mqtt_msg_handler_t handler, int qos);
+esp_err_t mqtt_client_subscribe(const char *topic, mqtt_msg_handler_t handler, int qos);
 
 
 #endif  // MQTT_DRIVER_H
