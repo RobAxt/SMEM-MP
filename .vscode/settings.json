@@ -12,7 +12,11 @@
   },
   "idf.flashType": "UART",
   "files.associations": {
-    "freertos.h": "c"
+    "freertos.h": "c",
+    "chrono": "c",
+    "i2c_pn532.h": "c",
+    "esp_err.h": "c",
+    "task.h": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }
