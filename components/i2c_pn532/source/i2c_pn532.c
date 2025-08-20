@@ -11,15 +11,14 @@
 #include "i2c_mgmt_driver.h"
 #include "i2c_pn532.h"
 
-//#define LOG_LOCAL_LEVEL  ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL  ESP_LOG_DEBUG
 
 #define PN532_MAX_FRAME  21
 #define PN532_NO_TAG_FOUND 0x80
 #define PN532_UID_OFFSET  14
 #define PN532_UID_SIZE_OFFSET  13
-#define PN532_TIMEOUT_MS 1000
+#define PN532_TIMEOUT_MS 100
 #define PN532_DELAY_MS 50
-#define PN532_QUEUE_SIZE 5
 
 static const uint8_t ACKNOWLEDGE[]           = {0x01, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 static const uint8_t NO_ACKNOWLEDGE[]        = {0x01, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00};
@@ -31,51 +30,24 @@ static const uint8_t INLIST_PASSIVE_TARGET[] = {0x00, 0x00, 0xFF, 0x04, 0XFC, 0X
 static const int PN532_I2C_ADDRESS = 0x24; // Dirección I2C del PN532 (0x48 >> 1)
 
 static const char *TAG = "i2c_pn532";
-static QueueHandle_t rsp_q;
-
-static esp_err_t i2c_write_frame(const uint8_t *frame, size_t len)
-{
-    i2c_request_t req = {
-        .op = I2C_OP_WRITE,
-        .device_addr = PN532_I2C_ADDRESS,
-        .tx_buffer = frame,
-        .tx_len = len,
-        .rx_buffer = NULL,
-        .rx_len = 0,
-        .timeout_ticks = pdMS_TO_TICKS(1000),
-        .response_queue = rsp_q,
-    };
-    xQueueSend(i2c_mgmt_get_queue(), &req, portMAX_DELAY);
-    esp_err_t ret; xQueueReceive(rsp_q, &ret, portMAX_DELAY);
-    return ret;
-}
-
-static esp_err_t i2c_read_bytes(uint8_t *rx, size_t rx_len, TickType_t to_ticks) {
-    i2c_request_t req = {
-        .op = I2C_OP_READ,
-        .device_addr = PN532_I2C_ADDRESS,
-        .tx_buffer = NULL,
-        .tx_len = 0,
-        .rx_buffer = rx,
-        .rx_len = rx_len,
-        .timeout_ticks = to_ticks,
-        .response_queue = rsp_q,
-    };
-    xQueueSend(i2c_mgmt_get_queue(), &req, portMAX_DELAY);
-    esp_err_t ret; xQueueReceive(rsp_q, &ret, portMAX_DELAY);
-    return ret;
-}
 
 static esp_err_t pn532_transaction(const char *op_name,
                                   const uint8_t *cmd, size_t cmd_len,
-                                  TickType_t inter_delay,              // p.ej. pdMS_TO_TICKS(PN532_TIMEOUT_MS)
-                                  TickType_t timeout,                  // p.ej. pdMS_TO_TICKS(PN532_DELAY_MS)
+                                  int inter_delay,              // p.ej. PN532_DELAY_MS
+                                  int timeout,                  // p.ej. PN532_TIMEOUT_MS
                                   uint8_t *resp_buf, size_t *resp_len, // si resp_len==NULL no copia
                                   const uint8_t *expected_resp, size_t expected_len,
                                   bool match_as_prefix)                // true: expected es prefijo
 {
-    // 1) Enviar comando
-    esp_err_t err = i2c_write_frame(cmd, cmd_len);
+    // 1) Iniciar transacción
+    if (i2c_mgmt_begin_transaction() != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to begin I2C transaction for %s", op_name);
+        return ESP_FAIL;
+    }
+
+    // 2) Enviar comando
+    esp_err_t err = i2c_mgmt_write(PN532_I2C_ADDRESS, cmd, cmd_len, timeout);
     if (err != ESP_OK) 
     {
         ESP_LOGE(TAG, "Failed to send %s command", op_name);
@@ -84,9 +56,10 @@ static esp_err_t pn532_transaction(const char *op_name,
 
     if (inter_delay) vTaskDelay(inter_delay);
 
-    // 2) Leer ACK
+    // 3) Leer ACK
+    size_t ack_len = sizeof(ACKNOWLEDGE);
     uint8_t ack[sizeof(ACKNOWLEDGE)] = {0};
-    err = i2c_read_bytes(ack, sizeof(ack), timeout);
+    err = i2c_mgmt_read(PN532_I2C_ADDRESS, ack, &ack_len, timeout);
 
     ESP_LOGD(TAG, "%s: Ack Read bytes %02X, %02X, %02X, %02X, %02X, %02X, %02X",
              op_name, ack[0], ack[1], ack[2], ack[3], ack[4], ack[5], ack[6]);
@@ -105,14 +78,15 @@ static esp_err_t pn532_transaction(const char *op_name,
 
     if (inter_delay) vTaskDelay(inter_delay);
 
-    // 3) Leer respuesta
+    // 4) Leer respuesta
     uint8_t local_buf[PN532_MAX_FRAME] = {0};
     uint8_t *dst = resp_buf ? resp_buf : local_buf;
-    size_t   to_read = resp_len ? *resp_len : sizeof(local_buf);
+    size_t   to_read = resp_len ? *resp_len : PN532_MAX_FRAME;
 
-    if (to_read == 0 || to_read > PN532_MAX_FRAME) to_read = PN532_MAX_FRAME;
+    if (to_read == 0 || to_read > PN532_MAX_FRAME) 
+        to_read = PN532_MAX_FRAME;
 
-    err = i2c_read_bytes(dst, to_read, timeout);
+    err = i2c_mgmt_read(PN532_I2C_ADDRESS, dst, &to_read, timeout);
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to read response for %s", op_name);
@@ -123,7 +97,7 @@ static esp_err_t pn532_transaction(const char *op_name,
     for (size_t i = 0; i < to_read; ++i)
         ESP_LOGD(TAG, "%s: Resp[%02u]=%02X", op_name, (unsigned)i, dst[i]);
 
-    // 4) Validar respuesta (opcional)
+    // 5) Validar respuesta (opcional)
     if (expected_resp && expected_len > 0) {
         if (match_as_prefix) 
         {
@@ -143,18 +117,21 @@ static esp_err_t pn532_transaction(const char *op_name,
         }
     }
 
+    // 6) Finalizar transacción
+    if (i2c_mgmt_end_transaction() != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to end I2C transaction for %s", op_name);
+        return ESP_FAIL;
+    }
+    
+    // 7) Copiar longitud leída
     if (resp_len) *resp_len = to_read;
     return ESP_OK;
 }
 
 esp_err_t i2c_pn532_start(void)
 {
-    rsp_q = xQueueCreate(PN532_QUEUE_SIZE, sizeof(esp_err_t));
-    if (NULL == rsp_q)
-    {
-        ESP_LOGE(TAG, "Failed to create response queue");
-        return ESP_FAIL;
-    }
+    ESP_LOGI(TAG, "Initializing PN532 NFC module over I2C");
 
     // Send SAMConfiguration command
     size_t resp_len = sizeof(SAMCONFIG_RESPONSE);
@@ -162,8 +139,8 @@ esp_err_t i2c_pn532_start(void)
 
     esp_err_t err = pn532_transaction("SAMConfiguration",
                                      SAMCONFIG, sizeof(SAMCONFIG),
-                                     pdMS_TO_TICKS(PN532_DELAY_MS),
-                                     pdMS_TO_TICKS(PN532_TIMEOUT_MS),
+                                     PN532_DELAY_MS,
+                                     PN532_TIMEOUT_MS,
                                      resp, &resp_len,
                                      SAMCONFIG_RESPONSE, sizeof(SAMCONFIG_RESPONSE),
                                      true);
@@ -187,8 +164,8 @@ esp_err_t i2c_pn532_read_passive_target(uint8_t *uid, size_t *uid_len)
 
     esp_err_t err = pn532_transaction("InListPassiveTarget",
                                      INLIST_PASSIVE_TARGET, sizeof(INLIST_PASSIVE_TARGET),
-                                     pdMS_TO_TICKS(PN532_DELAY_MS),
-                                     pdMS_TO_TICKS(PN532_TIMEOUT_MS),
+                                     PN532_DELAY_MS,
+                                     PN532_TIMEOUT_MS,
                                      resp, &resp_len,
                                      expected_prefix, expected_prefix_len,
                                      false);

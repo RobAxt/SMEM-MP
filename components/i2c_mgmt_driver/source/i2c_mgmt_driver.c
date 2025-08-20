@@ -1,101 +1,191 @@
+#include <string.h>
+
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "esp_log.h"
 
 #include "i2c_mgmt_driver.h"
 
+#define I2C_MGMT_DEFAULT_SPEED_HZ 100000  // 100 kHz por defecto
+#define I2C_MGMT_USE_INTERNAL_PULLUPS 0   // 1 = usa pull-ups internos; 0 = solo externos
+
 static const char *TAG = "i2c_mgmt";
 
-static QueueHandle_t i2c_queue = NULL;
-static i2c_port_t active_i2c_port;
+// Estado global (un único bus administrado)
+static i2c_master_bus_handle_t bus = NULL;
+static SemaphoreHandle_t mutex = NULL;
+static TaskHandle_t owner = NULL;
+static bool initialized = false;
 
-static void i2c_mgmt_task(void *param);
-
-esp_err_t i2c_mgmt_start(i2c_port_t i2c_port, gpio_num_t sda_pin, gpio_num_t scl_pin, size_t queue_size)
+esp_err_t i2c_mgmt_start(i2c_port_t i2c_port, gpio_num_t sda_pin, gpio_num_t scl_pin)
 {
-    active_i2c_port = i2c_port;
+    if (initialized)
+    {
+        ESP_LOGW(TAG, "I2C bus already initialized");
+        return ESP_OK;
+    }
 
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
+    i2c_master_bus_config_t bus_cfg = {
+        .i2c_port = i2c_port,                 // I2C_NUM_0 / I2C_NUM_1 según MCU
         .sda_io_num = sda_pin,
         .scl_io_num = scl_pin,
-        .sda_pullup_en = GPIO_PULLUP_DISABLE,
-        .scl_pullup_en = GPIO_PULLUP_DISABLE,
-        .master.clk_speed = 100000, // 100kHz
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,               // filtrado típico de glitches
+        .flags = {
+            .enable_internal_pullup = I2C_MGMT_USE_INTERNAL_PULLUPS ? 1 : 0,
+        },
     };
 
-    esp_err_t err;
-    err = i2c_param_config(i2c_port, &conf);
-    if (err != ESP_OK) return err;
+    esp_err_t err = i2c_new_master_bus(&bus_cfg, &bus);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "i2c_new_master_bus failed: %s", esp_err_to_name(err));
+        return err;
+    }
 
-    err = i2c_driver_install(i2c_port, I2C_MODE_MASTER, 0, 0, 0);
-    if (err != ESP_OK) return err;
+    mutex = xSemaphoreCreateMutex();
+    if (!mutex)
+    {
+        ESP_LOGE(TAG, "Failed to create mutex");
+        (void)i2c_del_master_bus(bus);
+        bus = NULL;
+        return ESP_ERR_NO_MEM;
+    }
 
-    i2c_queue = xQueueCreate(queue_size, sizeof(i2c_request_t));
-    if (i2c_queue == NULL) return ESP_ERR_NO_MEM;
-
-    configASSERT(pdPASS == xTaskCreate(i2c_mgmt_task, "i2c_mgmt_task", 4096, NULL, 10, NULL));
-    
-    ESP_LOGI(TAG, "Dispatcher I2C inicializado en puerto %d", i2c_port);
+    owner = NULL;
+    initialized = true;
+    ESP_LOGI(TAG, "I2C bus initialized (port %d, SDA=%d, SCL=%d, %u Hz, pullups=%s)",
+             (int)i2c_port, (int)sda_pin, (int)scl_pin,
+             (unsigned)I2C_MGMT_DEFAULT_SPEED_HZ,
+             I2C_MGMT_USE_INTERNAL_PULLUPS ? "internal" : "external");
     return ESP_OK;
 }
 
-QueueHandle_t i2c_mgmt_get_queue(void)
+esp_err_t i2c_mgmt_begin_transaction(void)
 {
-    return i2c_queue;
+    if (!initialized)
+        return ESP_ERR_INVALID_STATE;
+
+    if (xSemaphoreTake(mutex, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_TIMEOUT;
+
+    owner = xTaskGetCurrentTaskHandle();
+    ESP_LOGI(TAG, "I2C bus locked by task: %s", pcTaskGetName(owner));
+
+    return ESP_OK;
 }
 
-/**
- * @brief Task that handles I2C requests from the queue.
- * This task processes both read and write operations
- * and sends the result back to the requesting task.   
- * @param param Unused parameter.
- * @return void
- */
-
-static void i2c_mgmt_task(void *param)
+static inline bool owner_ok(void)
 {
-    i2c_request_t req;
-    while (1)
+    return owner == xTaskGetCurrentTaskHandle();
+}
+
+static esp_err_t create_device(uint8_t dev_addr, i2c_master_dev_handle_t *out)
+{
+    i2c_master_dev_handle_t dev = NULL;
+
+    i2c_device_config_t dev_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address  = dev_addr,
+        .scl_speed_hz    = I2C_MGMT_DEFAULT_SPEED_HZ,
+    };
+
+    esp_err_t err = i2c_master_bus_add_device(bus, &dev_cfg, &dev);
+
+    if (err != ESP_OK) 
+        return err;
+
+    *out = dev;
+    return ESP_OK;
+}
+
+static void destroy_device(i2c_master_dev_handle_t dev)
+{
+    if (dev)
+        (void)i2c_master_bus_rm_device(dev);
+}
+
+esp_err_t i2c_mgmt_write(uint8_t device_addr, const uint8_t *tx_buffer, size_t tx_len, int timeout_ms)
+{
+    if (!initialized) 
+        return ESP_ERR_INVALID_STATE;
+    
+    if (!owner_ok())
     {
-        if (xQueueReceive(i2c_queue, &req, portMAX_DELAY))
-        {
-            esp_err_t ret = ESP_FAIL;
-
-            if(req.device_addr < 0x08 || req.device_addr > 0x77) {
-                ESP_LOGE(TAG, "Dirección I2C inválida: %02X: %s", req.device_addr, esp_err_to_name(ret));
-                if (req.response_queue != NULL) {
-                    xQueueSend(req.response_queue, &ret, portMAX_DELAY);
-                }
-                continue;
-            }
-
-            if (req.op == I2C_OP_WRITE)
-            {
-                ret = i2c_master_write_to_device(
-                    active_i2c_port, req.device_addr,
-                    req.tx_buffer, req.tx_len,
-                    req.timeout_ticks
-                );
-
-                if(ESP_OK != ret) 
-                    ESP_LOGE(TAG, "Failed to write to device %02X: %s ", req.device_addr, esp_err_to_name(ret));
-            } 
-            
-            if (req.op == I2C_OP_READ)
-            {
-                ret = i2c_master_read_from_device(
-                    active_i2c_port, req.device_addr,
-                    req.rx_buffer, req.rx_len,
-                    req.timeout_ticks
-                );
-
-                if(ESP_OK != ret) 
-                    ESP_LOGE(TAG, "Failed to read from device %02X: %s", req.device_addr, esp_err_to_name(ret));
-            }
-
-            if (req.response_queue != NULL) 
-                xQueueSend(req.response_queue, &ret, portMAX_DELAY);
-        }
+        ESP_LOGE(TAG, "Write called outside of owned transaction");
+        return ESP_ERR_INVALID_STATE;
     }
+
+    if (!tx_buffer || tx_len == 0)
+        return ESP_ERR_INVALID_ARG;
+
+    i2c_master_dev_handle_t dev = NULL;
+    esp_err_t err = create_device(device_addr, &dev);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "add_device(0x%02X) failed: %s", device_addr, esp_err_to_name(err));
+        return err;
+    }
+
+    err = i2c_master_transmit(dev, tx_buffer, tx_len, timeout_ms);
+    if (err != ESP_OK)
+        ESP_LOGE(TAG, "transmit to 0x%02X failed: %s", device_addr, esp_err_to_name(err));
+
+    destroy_device(dev);
+    return err;
+}
+
+esp_err_t i2c_mgmt_read(uint8_t device_addr, uint8_t *rx_buffer, size_t *rx_len, int timeout_ms)
+{
+    if (!initialized) 
+        return ESP_ERR_INVALID_STATE;
+    
+    if (!owner_ok())
+    {
+        ESP_LOGE(TAG, "Read called outside of owned transaction");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    if(!rx_buffer || !rx_len || *rx_len == 0)
+        return ESP_ERR_INVALID_ARG;
+    
+    i2c_master_dev_handle_t dev = NULL;
+    esp_err_t err = create_device(device_addr, &dev);
+    if (err != ESP_OK) 
+    {
+        ESP_LOGE(TAG, "add_device(0x%02X) failed: %s", device_addr, esp_err_to_name(err));
+        return err;
+    }
+
+    size_t requested = *rx_len;
+    err = i2c_master_receive(dev, rx_buffer, requested, timeout_ms);
+    if(err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "receive from 0x%02X failed: %s", device_addr, esp_err_to_name(err));
+        destroy_device(dev);
+        return err;
+    }
+
+    *rx_len = requested; // la API entrega exactamente lo solicitado si retorna OK
+    destroy_device(dev);
+    return ESP_OK;
+}
+
+esp_err_t i2c_mgmt_end_transaction(void)
+{
+    if (!initialized)
+        return ESP_ERR_INVALID_STATE;
+
+    if (!owner_ok())
+    {
+        ESP_LOGE(TAG, "End transaction called by non-owner task");
+        return ESP_ERR_INVALID_STATE;
+    }
+    
+    owner = NULL;
+    xSemaphoreGive(mutex);
+    ESP_LOGI(TAG, "I2C bus released by task: %s", pcTaskGetName(owner));
+    
+    return ESP_OK;
 }
