@@ -17,7 +17,8 @@
     "i2c_pn532.h": "c",
     "esp_err.h": "c",
     "task.h": "c",
-    "esp_log.h": "c"
+    "esp_log.h": "c",
+    "cstdint": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }

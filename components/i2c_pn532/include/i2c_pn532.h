@@ -17,6 +17,9 @@
  * This project is licensed under the MIT License.
  */
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "esp_err.h"
 
 /**
@@ -33,11 +36,19 @@ esp_err_t i2c_pn532_start(void);
 
 /**
  * @brief Reads the UID of a passive NFC target.
- * @details 
+ * @details This function sends the INLIST_PASSIVE_TARGET command to the PN532 module
+ * and waits for a response containing the UID of a passive NFC target. The UID is stored
+ * in the provided buffer, and its length is returned through the uid_len parameter.
  * 
  * @param uid Pointer to a buffer where the UID will be stored.
  * @param uid_len Pointer to a variable that will hold the length of the UID.
  * @return ESP_OK on success, or an error code on failure.
+ * @note The uid buffer should be large enough to hold the expected UID length.
+ * @note If no target is found, uid_len will be set to 0.
+ * @note The function will block until a response is received or a timeout occurs.
+ * @note The PN532 module must be initialized with i2c_pn532_start()
+ * before calling this function.
+ * @note The expected UID length is typically 4 to 10 bytes, depending on the NFC tag type.
  */
 esp_err_t i2c_pn532_read_passive_target(uint8_t *uid, size_t *uid_len);
 

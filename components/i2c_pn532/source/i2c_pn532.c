@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 #include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
 #include "freertos/task.h"
 #include "esp_log.h"
 
@@ -50,6 +49,7 @@ static esp_err_t pn532_transaction(const char *op_name,
     esp_err_t err = i2c_mgmt_write(PN532_I2C_ADDRESS, cmd, cmd_len, timeout);
     if (err != ESP_OK) 
     {
+        i2c_mgmt_end_transaction(); // Finalizar transacción en caso de error
         ESP_LOGE(TAG, "Failed to send %s command", op_name);
         return err;
     }
@@ -66,12 +66,14 @@ static esp_err_t pn532_transaction(const char *op_name,
 
     if (err != ESP_OK) 
     {
+        i2c_mgmt_end_transaction(); // Finalizar transacción en caso de error
         ESP_LOGE(TAG, "Failed to read ACK for %s", op_name);
         return err;
     }
     if (memcmp(ack, ACKNOWLEDGE, sizeof(ACKNOWLEDGE)) != 0 ||
         memcmp(ack, NO_ACKNOWLEDGE, sizeof(NO_ACKNOWLEDGE)) == 0) 
     {
+        i2c_mgmt_end_transaction(); // Finalizar transacción en caso de error
         ESP_LOGE(TAG, "Failed to receive valid ACK for %s", op_name);
         return ESP_FAIL;
     }
@@ -89,6 +91,7 @@ static esp_err_t pn532_transaction(const char *op_name,
     err = i2c_mgmt_read(PN532_I2C_ADDRESS, dst, &to_read, timeout);
     if (err != ESP_OK)
     {
+        i2c_mgmt_end_transaction(); // Finalizar transacción en caso de error
         ESP_LOGE(TAG, "Failed to read response for %s", op_name);
         return err;
     }
@@ -103,6 +106,7 @@ static esp_err_t pn532_transaction(const char *op_name,
         {
             if (to_read < expected_len || memcmp(dst, expected_resp, expected_len) != 0) 
             {
+                i2c_mgmt_end_transaction(); // Finalizar transacción en caso de error
                 ESP_LOGE(TAG, "%s: response prefix mismatch", op_name);
                 return ESP_FAIL;
             }
@@ -111,6 +115,7 @@ static esp_err_t pn532_transaction(const char *op_name,
         {
             if (to_read != expected_len || memcmp(dst, expected_resp, expected_len) != 0) 
             {
+                i2c_mgmt_end_transaction(); // Finalizar transacción en caso de error
                 ESP_LOGE(TAG, "%s: response mismatch", op_name);
                 return ESP_FAIL;
             }
