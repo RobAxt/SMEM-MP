@@ -18,7 +18,8 @@
     "esp_err.h": "c",
     "task.h": "c",
     "esp_log.h": "c",
-    "cstdint": "c"
+    "cstdint": "c",
+    "stdio.h": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }
