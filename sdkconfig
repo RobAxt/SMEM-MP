@@ -580,6 +580,15 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# Active Object Memory Pool Configuration
+#
+CONFIG_AO_MPOOL_BLOCK_SIZE=8
+CONFIG_AO_MPOOL_BLOCK_COUNT=32
+CONFIG_AO_QUEUE_LEN=8
+CONFIG_AO_POST_TIMEOUT_MS=100
+# end of Active Object Memory Pool Configuration
+
+#
 # Compiler options
 #
 CONFIG_COMPILER_OPTIMIZATION_DEBUG=y

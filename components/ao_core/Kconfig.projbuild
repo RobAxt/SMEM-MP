@@ -1,0 +1,28 @@
+menu "Active Object Memory Pool Configuration"
+
+config AO_MPOOL_BLOCK_SIZE
+    int "Tamaño de bloque del memory pool"
+    default 8
+    help
+        Define el tamaño de cada bloque en bytes.
+        Debe ser mayor o igual a sizeof(ao_evt_t).
+
+config AO_MPOOL_BLOCK_COUNT
+    int "Cantidad de bloques en el memory pool"
+    default 32
+    help
+        Número total de bloques disponibles en el pool.
+
+config AO_QUEUE_LEN
+    int "Tamaño de cola por defecto para cada AO/FSM"
+    default 8
+    help
+        Número máximo de eventos que pueden encolarse en un AO.
+
+config AO_POST_TIMEOUT_MS
+    int "Timeout por defecto (ms) en ao_post()"
+    default 100
+    help
+        Tiempo máximo de espera para encolar un evento cuando la cola está llena.
+
+endmenu

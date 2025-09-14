@@ -97,7 +97,7 @@ esp_err_t ao_start(ao_t* self, UBaseType_t prio, uint32_t stack_words)
     return ESP_OK;
 }
 
-esp_err_t ao_post(ao_t* self, uint16_t type, const void* payload, uint16_t len, TickType_t to_ticks)
+esp_err_t ao_post(ao_t* self, uint8_t type, const void* payload, uint8_t len, TickType_t to_ticks)
 {
     if (!self || !self->q) return ESP_ERR_INVALID_ARG;
 

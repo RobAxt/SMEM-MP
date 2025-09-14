@@ -1,10 +1,12 @@
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 
 #include "ao_evt_mpool.h"
+#include "ao_core.h"
 
 /**
  * @brief Configuración del tamaño y cantidad de bloques en el pool de memoria.
@@ -13,11 +15,13 @@
  * @note MP_BLOCK_COUNT debe ser suficiente para manejar la carga máxima esperada.
  */
 #ifndef MP_BLOCK_SIZE
-#define MP_BLOCK_SIZE   8      
+#define MP_BLOCK_SIZE   CONFIG_AO_MPOOL_BLOCK_SIZE     
 #endif
 #ifndef MP_BLOCK_COUNT
-#define MP_BLOCK_COUNT  32
+#define MP_BLOCK_COUNT  CONFIG_AO_MPOOL_BLOCK_COUNT
 #endif
+
+static_assert(MP_BLOCK_SIZE >= sizeof(ao_evt_t) + 1, "MP_BLOCK_SIZE demasiado pequeño");
 
 // Memoria estática para el pool de memoria
 static uint8_t s_mem[MP_BLOCK_COUNT][MP_BLOCK_SIZE];

@@ -13,7 +13,8 @@
   "idf.flashType": "UART",
   "files.associations": {
     "freertos.h": "c",
-    "ao_evt_mpool.h": "c"
+    "ao_evt_mpool.h": "c",
+    "assert.h": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }
