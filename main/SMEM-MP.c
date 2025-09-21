@@ -11,16 +11,16 @@
 static const char *TAG = "SMEM-MP";
 
 // Definición de eventos y estados
-enum { EVT_TURN_ON = 0, EVT_TURN_DIMMER, EVT_TURN_OFF };
+enum { TURN_ON_EVT = 0, TURN_DIMMER_EVT, TURN_OFF_EVT };
 enum { ON_STATE = 0, DIMMER_STATE, OFF_STATE };
 
 // Prototipos de acciones
-fsm_state_t fsm_onState_action(ao_fsm_t* fsm, const ao_evt_t* evt);
-fsm_state_t fsm_dimmerState_action(ao_fsm_t* fsm, const ao_evt_t* evt);
-fsm_state_t fsm_offState_action(ao_fsm_t* fsm, const ao_evt_t* evt);
+ao_fsm_state_t fsm_onState_action(ao_fsm_t* fsm, const ao_evt_t* evt);
+ao_fsm_state_t fsm_dimmerState_action(ao_fsm_t* fsm, const ao_evt_t* evt);
+ao_fsm_state_t fsm_offState_action(ao_fsm_t* fsm, const ao_evt_t* evt);
 
 // Definición de transiciones
-fsm_transition_t transitions[] = {
+ao_fsm_transition_t transitions[] = {
     { ON_STATE,     fsm_onState_action },
     { DIMMER_STATE, fsm_dimmerState_action },
     { OFF_STATE,    fsm_offState_action }
@@ -40,8 +40,9 @@ void app_main(void)
 {
     char demoName[] = "Switch FSM Demo";
 
-    ESP_LOGI(TAG, "Iniciando demo %s", demoName);
-    ao_fsm_t* fsm = ao_fsm_create(demoName, OFF_STATE, transitions, sizeof(transitions)/sizeof(fsm_transition_t));
+    ESP_LOGI(TAG, "Iniciando demo: %s", demoName);
+    
+    ao_fsm_t* fsm = ao_fsm_create(demoName, OFF_STATE, transitions, sizeof(transitions)/sizeof(ao_fsm_transition_t));
     
     if (!fsm)
     {
@@ -57,21 +58,21 @@ void app_main(void)
     }
 
     // Enviar eventos de prueba
-    ao_fsm_post(fsm, EVT_TURN_ON, NULL, 0);
+    ao_fsm_post(fsm, TURN_ON_EVT, NULL, 0);
     print_pool_status();
     vTaskDelay(pdMS_TO_TICKS(500));
 
     uint8_t dimmer_level = 5; // Ejemplo de nivel de dimmer
-    ao_fsm_post(fsm, EVT_TURN_DIMMER, &dimmer_level, sizeof(dimmer_level));
+    ao_fsm_post(fsm, TURN_DIMMER_EVT, &dimmer_level, sizeof(dimmer_level));
     print_pool_status();
     vTaskDelay(pdMS_TO_TICKS(500));
 
     dimmer_level = 10; // Cambiar nivel de dimmer
-    ao_fsm_post(fsm, EVT_TURN_DIMMER, &dimmer_level, sizeof(dimmer_level));
+    ao_fsm_post(fsm, TURN_DIMMER_EVT, &dimmer_level, sizeof(dimmer_level));
     print_pool_status();
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    ao_fsm_post(fsm, EVT_TURN_OFF, NULL, 0);  
+    ao_fsm_post(fsm, TURN_OFF_EVT, NULL, 0);  
     print_pool_status();   
     vTaskDelay(pdMS_TO_TICKS(2000));
     print_pool_status();
@@ -80,12 +81,12 @@ void app_main(void)
 }
 
 
-fsm_state_t fsm_onState_action(ao_fsm_t* fsm, const ao_evt_t* evt) 
+ao_fsm_state_t fsm_onState_action(ao_fsm_t* fsm, const ao_evt_t* evt) 
 {
    ESP_LOGI(TAG, "Estado ON: Recibido evento %d", evt->type);
    switch (evt->type) 
    {
-        case EVT_TURN_DIMMER:
+        case TURN_DIMMER_EVT:
             if (evt->len == sizeof(uint8_t)) 
             {
                 uint8_t level = evt->data[0];
@@ -93,7 +94,7 @@ fsm_state_t fsm_onState_action(ao_fsm_t* fsm, const ao_evt_t* evt)
                 return DIMMER_STATE; 
             }
             break;
-        case EVT_TURN_OFF:
+        case TURN_OFF_EVT:
             ESP_LOGI(TAG, "Apagando");
             return OFF_STATE;
         default:
@@ -103,12 +104,12 @@ fsm_state_t fsm_onState_action(ao_fsm_t* fsm, const ao_evt_t* evt)
     return ON_STATE;
 }
 
-fsm_state_t fsm_dimmerState_action(ao_fsm_t* fsm, const ao_evt_t* evt) 
+ao_fsm_state_t fsm_dimmerState_action(ao_fsm_t* fsm, const ao_evt_t* evt) 
 {
     ESP_LOGI(TAG, "Estado DIMMER: Recibido evento %d", evt->type);
     switch (evt->type) 
     {
-        case EVT_TURN_DIMMER:
+        case TURN_DIMMER_EVT:
             if (evt->len == sizeof(uint8_t)) 
             {
                 uint8_t level = evt->data[0];
@@ -116,10 +117,10 @@ fsm_state_t fsm_dimmerState_action(ao_fsm_t* fsm, const ao_evt_t* evt)
                 return DIMMER_STATE; 
             }
             break;
-        case EVT_TURN_OFF:
+        case TURN_OFF_EVT:
             ESP_LOGI(TAG, "Apagando");
             return OFF_STATE;
-        case EVT_TURN_ON:
+        case TURN_ON_EVT:
             ESP_LOGI(TAG, "Encendiendo");
             return ON_STATE;
         default:
@@ -129,12 +130,12 @@ fsm_state_t fsm_dimmerState_action(ao_fsm_t* fsm, const ao_evt_t* evt)
     return DIMMER_STATE;
 }
 
-fsm_state_t fsm_offState_action(ao_fsm_t* fsm, const ao_evt_t* evt) 
+ao_fsm_state_t fsm_offState_action(ao_fsm_t* fsm, const ao_evt_t* evt) 
 {
     ESP_LOGI(TAG, "Estado OFF: Recibido evento %d", evt->type);
     switch (evt->type) 
     {
-        case EVT_TURN_ON:
+        case TURN_ON_EVT:
             ESP_LOGI(TAG, "Encendiendo");
             return ON_STATE;
         default:

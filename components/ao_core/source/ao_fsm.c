@@ -18,9 +18,9 @@ static const char *TAG = "ao_fsm";
 struct ao_fsm_s 
 {
     ao_t* owner;
-    const fsm_transition_t* transitions;
+    const ao_fsm_transition_t* transitions;
     size_t transitions_count;
-    fsm_state_t state;
+    ao_fsm_state_t current_state;
 };
 
 static void ao_fsm_handler(evt_cntx_t evt_ctx, const ao_evt_t* evt) 
@@ -28,21 +28,21 @@ static void ao_fsm_handler(evt_cntx_t evt_ctx, const ao_evt_t* evt)
     ao_fsm_t* fsm = (ao_fsm_t*)evt_ctx;
     if (!fsm || !fsm->owner || !fsm->transitions) return;
 
-    fsm_state_t next_state = fsm->state;
+    ao_fsm_state_t next_state = fsm->current_state;
     
     for(size_t i = 0; i < fsm->transitions_count; i++) 
     {
-        if (fsm->transitions[i].state == fsm->state) 
+        if (fsm->transitions[i].state == fsm->current_state) 
         {
             if (fsm->transitions[i].action)
                 next_state = fsm->transitions[i].action(fsm, evt);
             break;
         }
     }
-    fsm->state = next_state;
+    fsm->current_state = next_state;
 }
 
-ao_fsm_t* ao_fsm_create(const char* name, fsm_state_t initial_state, const fsm_transition_t* transitions, size_t transitions_count) 
+ao_fsm_t* ao_fsm_create(const char* name, ao_fsm_state_t initial_state, const ao_fsm_transition_t* transitions, size_t transitions_count) 
 {
     ao_fsm_t* fsm = (ao_fsm_t*)calloc(1, sizeof(ao_fsm_t));
     if (!fsm) return NULL;
@@ -57,7 +57,7 @@ ao_fsm_t* ao_fsm_create(const char* name, fsm_state_t initial_state, const fsm_t
 
     fsm->transitions = transitions;
     fsm->transitions_count = transitions_count;
-    fsm->state = initial_state;
+    fsm->current_state = initial_state;
 
     return fsm;
 }

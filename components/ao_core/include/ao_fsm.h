@@ -32,7 +32,7 @@ typedef struct ao_fsm_s ao_fsm_t;
  * @details This type represents the state of the finite state machine.
  * It is defined as an 8-bit unsigned integer.
  */
-typedef uint8_t fsm_state_t;
+typedef uint8_t ao_fsm_state_t;
 
 /**
  * @brief Definition of the action handler function type for state transitions.
@@ -40,7 +40,7 @@ typedef uint8_t fsm_state_t;
  * in the finite state machine. The handler takes a pointer to the FSM and a pointer to the event
  * that triggered the transition, and returns the next state of the FSM.
  */
-typedef fsm_state_t (*fsm_action_handler_t)(ao_fsm_t* fsm, const ao_evt_t* evt);
+typedef ao_fsm_state_t (*ao_fsm_action_handler_t)(ao_fsm_t* fsm, const ao_evt_t* evt);
 
 /**
  * @brief Definition of the state transition structure.
@@ -48,9 +48,9 @@ typedef fsm_state_t (*fsm_action_handler_t)(ao_fsm_t* fsm, const ao_evt_t* evt);
  * including the current state and the action handler function to be executed during the transition.
  */
 typedef struct {
-    fsm_state_t          state;
-    fsm_action_handler_t action;
-} fsm_transition_t;
+    ao_fsm_state_t          state;
+    ao_fsm_action_handler_t action;
+} ao_fsm_transition_t;
 
 /**
  * @brief Creates a new finite state machine (FSM) for an active object.
@@ -61,7 +61,7 @@ typedef struct {
  * @param transitions_count The number of state transitions in the transitions array.
  * @return A pointer to the created FSM, or NULL if creation fails.  
  */
-ao_fsm_t* ao_fsm_create(const char* name, fsm_state_t initial_state, const fsm_transition_t* transitions, size_t transitions_count);
+ao_fsm_t* ao_fsm_create(const char* name, ao_fsm_state_t initial_state, const ao_fsm_transition_t* transitions, size_t transitions_count);
 
 /**
  * @brief Starts the finite state machine (FSM) associated with an active object.
