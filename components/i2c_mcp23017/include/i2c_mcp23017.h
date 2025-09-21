@@ -23,11 +23,25 @@
 #include "esp_err.h"
  
 // Máscaras de E/S pedidas
+/**
+ * @brief Example implementation.
+ * @note Use this four defines to configure the inputs and outputs of each ports.
+ */
+#ifndef IODIRA_VALUE
 #define IODIRA_VALUE 0x0F  // A0..A3 IN=1, A4..A7 OUT=0
-#define IODIRB_VALUE 0xCF  // B0..B3 IN, B4..B5 OUT, B6..B7 IN
+#endif
 
+#ifndef IODIRB_VALUE
+#define IODIRB_VALUE 0xCF  // B0..B3 IN, B4..B5 OUT, B6..B7 IN
+#endif
+
+#ifndef GPIOA_OUT_MASK
 #define GPIOA_OUT_MASK 0xF0 // A4..A7
+#endif
+
+#ifndef GPIOB_OUT_MASK
 #define GPIOB_OUT_MASK 0x30 // B4..B5
+#endif
 
 /**
  * @brief Initializes the MCP23017 I/O expander over I2C.

@@ -19,7 +19,8 @@
     "task.h": "c",
     "esp_log.h": "c",
     "cstdint": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "stdint.h": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }
