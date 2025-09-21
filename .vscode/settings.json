@@ -20,7 +20,10 @@
     "esp_log.h": "c",
     "cstdint": "c",
     "stdio.h": "c",
-    "stdint.h": "c"
+    "stdint.h": "c",
+    "ao_evt_mpool.h": "c",
+    "assert.h": "c",
+    "random": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }
