@@ -9,7 +9,7 @@
 #include "ao_evt_mpool.h"
 #include "ao_core.h"
 
-static const char* TAG = "active_object";
+static const char* TAG = "ao_core";
 
 /**
  * @brief Definition of the active object structure.
@@ -40,6 +40,10 @@ static void ao_task(void* arg)
                 self->on_event(evt_ctx, evt);
             mpool_free(evt);
             evt = NULL;
+
+            ESP_LOGD(TAG, "Cola[%s]: ocupados=%u libres=%u", self->name,
+                     (unsigned)uxQueueMessagesWaiting(self->q),
+                     (unsigned)uxQueueSpacesAvailable(self->q));
         }
     }
 

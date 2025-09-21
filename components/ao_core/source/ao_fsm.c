@@ -25,19 +25,25 @@ struct ao_fsm_s
 
 static void ao_fsm_handler(evt_cntx_t evt_ctx, const ao_evt_t* evt) 
 {
+    size_t i;
     ao_fsm_t* fsm = (ao_fsm_t*)evt_ctx;
     if (!fsm || !fsm->owner || !fsm->transitions) return;
 
     ao_fsm_state_t next_state = fsm->current_state;
     
-    for(size_t i = 0; i < fsm->transitions_count; i++) 
+    for(i = 0; i < fsm->transitions_count; i++) 
     {
-        if (fsm->transitions[i].state == fsm->current_state) 
+        if (fsm->transitions[i].state == fsm->current_state &&
+            fsm->transitions[i].event_type == evt->type) 
         {
             if (fsm->transitions[i].action)
                 next_state = fsm->transitions[i].action(fsm, evt);
             break;
         }
+    }
+    if(i == fsm->transitions_count)
+    {
+        ESP_LOGW(TAG, "No transition found for state %d and event %d", fsm->current_state, evt->type);
     }
     fsm->current_state = next_state;
 }

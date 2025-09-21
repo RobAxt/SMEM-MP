@@ -14,7 +14,8 @@
   "files.associations": {
     "freertos.h": "c",
     "ao_evt_mpool.h": "c",
-    "assert.h": "c"
+    "assert.h": "c",
+    "random": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }

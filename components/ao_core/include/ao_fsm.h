@@ -8,7 +8,7 @@
  *          which is responsible for managing finite state machines in active objects.
  * @author Roberto Axt
  * @date 2025-10-13
- * @version 0.0
+ * @version 0.1
  * 
  * @par License
  * This file is part of the AO FSM module and is licensed under the MIT License.
@@ -35,6 +35,13 @@ typedef struct ao_fsm_s ao_fsm_t;
 typedef uint8_t ao_fsm_state_t;
 
 /**
+ * @brief Definition of the event type for the finite state machine.
+ * @details This type represents the event type that can trigger state transitions
+ * in the finite state machine. It is defined as an 8-bit unsigned integer.
+ */
+typedef uint8_t ao_fsm_evt_type_t;
+
+/**
  * @brief Definition of the action handler function type for state transitions.
  * @details This type defines the signature of the action handler function for state transitions
  * in the finite state machine. The handler takes a pointer to the FSM and a pointer to the event
@@ -49,6 +56,7 @@ typedef ao_fsm_state_t (*ao_fsm_action_handler_t)(ao_fsm_t* fsm, const ao_evt_t*
  */
 typedef struct {
     ao_fsm_state_t          state;
+    ao_fsm_evt_type_t       event_type;
     ao_fsm_action_handler_t action;
 } ao_fsm_transition_t;
 
