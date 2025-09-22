@@ -10,8 +10,6 @@
 #include "i2c_mgmt_driver.h"
 #include "i2c_pn532.h"
 
-#define LOG_LOCAL_LEVEL  ESP_LOG_DEBUG
-
 #define PN532_MAX_FRAME  21
 #define PN532_NO_TAG_FOUND 0x80
 #define PN532_UID_OFFSET  14

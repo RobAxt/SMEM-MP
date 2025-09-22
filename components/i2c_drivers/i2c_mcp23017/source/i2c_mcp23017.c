@@ -5,8 +5,6 @@
 #include "i2c_mgmt_driver.h"
 #include "i2c_mcp23017.h"
 
-#define LOG_LOCAL_LEVEL  ESP_LOG_DEBUG
-
 // Dirección de registros (BANK=0 por defecto)
 #define MCP23017_IODIRA   0x00
 #define MCP23017_IODIRB   0x01
