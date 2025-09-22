@@ -23,7 +23,14 @@ struct ao_fsm_s
     ao_fsm_state_t current_state;
 };
 
-static void ao_fsm_handler(evt_cntx_t evt_ctx, const ao_evt_t* evt) 
+typedef struct
+{
+    ao_fsm_t *fsm;
+    ao_fsm_evt_type_t event_type;
+} ao_fsm_timer_t;
+
+
+static void ao_fsm_handler(evt_cntx_t evt_ctx, const ao_fsm_evt_t* evt) 
 {
     size_t i;
     ao_fsm_t* fsm = (ao_fsm_t*)evt_ctx;
@@ -74,7 +81,7 @@ esp_err_t ao_fsm_start(ao_fsm_t* fsm, UBaseType_t prio, uint32_t stack_words)
     return ao_start(fsm->owner, prio, stack_words);
 }
 
-esp_err_t ao_fsm_post(ao_fsm_t* fsm, uint8_t type, const void* payload, uint8_t len) 
+esp_err_t ao_fsm_post(ao_fsm_t* fsm, ao_fsm_evt_type_t type, const void* payload, uint8_t len) 
 {
     if (!fsm || !fsm->owner) return ESP_ERR_INVALID_ARG;
     esp_err_t err = ao_post(fsm->owner, type, payload, len, AO_EVT_POST_TO);
@@ -88,4 +95,51 @@ void ao_fsm_destroy(ao_fsm_t* fsm)
     if (!fsm) return;
     if (fsm->owner) ao_destroy(fsm->owner);
     free(fsm);
-}   
+}
+
+static void timer_cb(TimerHandle_t xTimer)
+{
+    ao_fsm_timer_t *ctx = (ao_fsm_timer_t*) pvTimerGetTimerID(xTimer);
+    if (ctx && ctx->fsm) 
+        ao_fsm_post(ctx->fsm, ctx->event_type, NULL, 0);
+    ESP_LOGD(TAG, "Timer callback posting event %d", ctx ? ctx->event_type : -1);
+    mpool_free(ctx);
+}
+
+TimerHandle_t ao_fsm_timer_start(ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, uint32_t period_ms)
+{
+    if (!fsm || !fsm->owner) return NULL;
+
+    ao_fsm_timer_t *ctx = (ao_fsm_timer_t*)mpool_alloc(sizeof(ao_fsm_timer_t));
+    if (!ctx) return NULL;
+
+    ctx->fsm = fsm;
+    ctx->event_type = event_type;
+
+    TimerHandle_t timer = xTimerCreate("fsm_timer", pdMS_TO_TICKS(period_ms), pdTRUE, (void*)ctx, timer_cb);
+    if (!timer) 
+    {
+        free(ctx);
+        return NULL;
+    }
+
+    if (xTimerStart(timer, 0) != pdPASS) 
+    {
+        xTimerDelete(timer, 0);
+        free(ctx);
+        return NULL;
+    }
+
+    return timer;
+}
+
+void ao_fsm_timer_stop(TimerHandle_t timer)
+{
+    if (!timer) return;
+
+    ao_fsm_timer_t *ctx = (ao_fsm_timer_t*) pvTimerGetTimerID(timer);
+    
+    if (ctx) mpool_free(ctx);
+    xTimerStop(timer, 0);
+    xTimerDelete(timer, 0);
+}

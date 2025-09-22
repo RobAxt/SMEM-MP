@@ -4,6 +4,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
+#include "esp_log.h"
 
 #include "ao_evt_mpool.h"
 #include "ao_core.h"
@@ -21,7 +22,9 @@
 #define MP_BLOCK_COUNT  CONFIG_AO_MPOOL_BLOCK_COUNT
 #endif
 
-static_assert(MP_BLOCK_SIZE >= sizeof(ao_evt_t) + 1, "MP_BLOCK_SIZE demasiado pequeño");
+const char* TAG = "ao_evt_mpool";
+
+static_assert(MP_BLOCK_SIZE >= sizeof(ao_evt_t) + 1, "MP_BLOCK_SIZE too small for ao_evt_t");
 
 // Memoria estática para el pool de memoria
 static uint8_t s_mem[MP_BLOCK_COUNT][MP_BLOCK_SIZE];
@@ -48,8 +51,11 @@ bool mpool_start(void)
 
 void* mpool_alloc(size_t size)
 {
-    if (!s_inited || size == 0 || size > MP_BLOCK_SIZE) 
+    if (!s_inited || size == 0 || size > MP_BLOCK_SIZE)
+    {
+        ESP_LOGD(TAG, "mpool_alloc: No inicializado o tamaño inválido"); 
         return NULL;    // No inicializado o tamaño inválido
+    }
 
     mp_enter();
     for (uint32_t i = 0; i < MP_BLOCK_COUNT; i++) {

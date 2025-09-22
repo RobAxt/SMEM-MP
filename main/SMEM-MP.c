@@ -3,6 +3,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/timers.h"
 #include "esp_log.h"
 
 #include "ao_evt_mpool.h"
@@ -16,12 +17,12 @@ enum { TURN_ON_EVT = 0, TURN_DIMMER_EVT = 1, TURN_OFF_EVT = 2 };
 enum { ON_STATE = 0, DIMMER_STATE = 1, OFF_STATE = 2 };
 
 // Prototipos de acciones
-ao_fsm_state_t fsm_onState_dimmerEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt);
-ao_fsm_state_t fsm_onState_offEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt);
-ao_fsm_state_t fsm_dimmerState_onEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt);
-ao_fsm_state_t fsm_dimmerState_dimmerEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt);
-ao_fsm_state_t fsm_dimmerState_offEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt);
-ao_fsm_state_t fsm_offState_onEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt);
+ao_fsm_state_t fsm_onState_dimmerEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt);
+ao_fsm_state_t fsm_onState_offEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt);
+ao_fsm_state_t fsm_dimmerState_onEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt);
+ao_fsm_state_t fsm_dimmerState_dimmerEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt);
+ao_fsm_state_t fsm_dimmerState_offEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt);
+ao_fsm_state_t fsm_offState_onEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt);
 
 // Definición de transiciones
 ao_fsm_transition_t transitions[] = {
@@ -45,8 +46,6 @@ void print_pool_status(void)
 
 void app_main(void) 
 {
-    esp_log_level_set("ao_core", ESP_LOG_DEBUG);
-
     char demoName[] = "Switch FSM Demo";
 
     ESP_LOGI(TAG, "Iniciando demo: %s", demoName);
@@ -65,6 +64,14 @@ void app_main(void)
         ESP_LOGE(TAG, "No se pudo iniciar FSM. err=%s (0x%x)", esp_err_to_name(err), err);
         return;
     }
+    
+    TimerHandle_t tmp = ao_fsm_timer_start(fsm, TURN_ON_EVT, 1000);
+
+    if(!tmp) 
+        ESP_LOGE(TAG, "No se pudo iniciar timer");
+        
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    ao_fsm_timer_stop(tmp);
 
     // Enviar eventos de prueba
     ao_fsm_post(fsm, TURN_OFF_EVT, NULL, 0); // transicion invalida
@@ -104,7 +111,7 @@ void app_main(void)
 
 // Implementación de acciones
 
-ao_fsm_state_t fsm_onState_dimmerEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt)
+ao_fsm_state_t fsm_onState_dimmerEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt)
 {   
     if(evt->type != TURN_DIMMER_EVT)
     {
@@ -125,7 +132,7 @@ ao_fsm_state_t fsm_onState_dimmerEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt)
     return DIMMER_STATE;
 }
 
-ao_fsm_state_t fsm_onState_offEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt)
+ao_fsm_state_t fsm_onState_offEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt)
 {
     if(evt->type != TURN_OFF_EVT)
     {
@@ -137,7 +144,7 @@ ao_fsm_state_t fsm_onState_offEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt)
     return OFF_STATE;
 }
 
-ao_fsm_state_t fsm_dimmerState_onEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt)
+ao_fsm_state_t fsm_dimmerState_onEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt)
 {
     if(evt->type != TURN_ON_EVT)
     {
@@ -149,7 +156,7 @@ ao_fsm_state_t fsm_dimmerState_onEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt)
     return ON_STATE;
 }
 
-ao_fsm_state_t fsm_dimmerState_dimmerEvt_action(ao_fsm_t* fsm, const ao_evt_t* evt)
+ao_fsm_state_t fsm_dimmerState_dimmerEvt_action(ao_fsm_t* fsm, const ao_fsm_evt_t* evt)
 {
     if(evt->type != TURN_DIMMER_EVT)
     {
