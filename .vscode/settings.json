@@ -23,7 +23,10 @@
     "stdint.h": "c",
     "ao_evt_mpool.h": "c",
     "assert.h": "c",
-    "random": "c"
+    "random": "c",
+    "ao_fsm.h": "c",
+    "esp_system.h": "c",
+    "stdbool.h": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }

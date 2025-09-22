@@ -18,6 +18,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "ao_core.h"
+
 #include "freertos/FreeRTOS.h"
 #include "esp_err.h"
 

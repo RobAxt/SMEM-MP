@@ -2,7 +2,7 @@
 #define AO_CORE_H
 
 /**
- * @file ao.h
+ * @file ao_core.h
  * @brief Header file for the AO (Active Object) module.
  * @details This file contains the declarations and definitions for the AO module,
  *          which is responsible for managing active objects in the system.
