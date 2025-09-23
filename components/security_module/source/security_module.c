@@ -76,7 +76,7 @@ esp_err_t security_fsm_start(void)
     return ao_fsm_start(security_fsm, tskIDLE_PRIORITY + 1, 2048);
 }
 
-static esp_err_t security_watchers_start(ao_fsm_t* security_fsm)
+esp_err_t security_watchers_start(ao_fsm_t* security_fsm)
 {
     ESP_LOGI(TAG, "Starting security watchers...");
 

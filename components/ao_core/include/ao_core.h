@@ -21,15 +21,36 @@
 #include "freertos/FreeRTOS.h"
 #include "esp_err.h"
 
+/**
+ * @brief Definition of the ao_evt_type_t type.
+ * @details This type represents the type of an event.
+ * @note The type is defined as a uint8_t, allowing for 256 different event types.
+ */
+typedef uint8_t ao_evt_type_t;
+
+/**
+ * @brief Definition of the ao_evt_len_t type.
+ * @details This type represents the length of the event data.
+ * @note The length is defined as a uint8_t, allowing for event data lengths up to 255 bytes.
+ */
+typedef uint8_t ao_evt_len_t;
+
+/**
+ * @brief Definition of the ao_evt_data_t type.
+ * @details This type represents a pointer to the event data.
+ * @note The data is defined as a pointer to uint8_t, allowing for flexible event data storage.
+ */
+typedef uint8_t ao_evt_data_t;
+
 /** 
  * @brief Definition of an event structure.
  * @details This structure represents an event that can be processed by an active object.
  * @note The data field is a flexible array member, allowing for variable-length event data.
  */
 typedef struct {
-    uint8_t type;
-    uint8_t len;
-    uint8_t data[];
+    ao_evt_type_t type;
+    ao_evt_len_t  len;
+    ao_evt_data_t data[];
 } ao_evt_t;
 
 /**
