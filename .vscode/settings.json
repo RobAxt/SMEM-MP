@@ -15,7 +15,9 @@
     "freertos.h": "c",
     "ao_evt_mpool.h": "c",
     "assert.h": "c",
-    "random": "c"
+    "random": "c",
+    "ao_fsm_watcher.h": "c",
+    "chrono": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }

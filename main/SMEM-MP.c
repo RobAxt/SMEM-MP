@@ -6,6 +6,7 @@
 #include "freertos/timers.h"
 #include "esp_log.h"
 
+#include "ao_fsm_watcher.h"
 #include "ao_evt_mpool.h"
 #include "ao_core.h"
 #include "ao_fsm.h"

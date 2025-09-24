@@ -23,12 +23,20 @@ struct ao_s
     ao_handler_t  on_event;
     evt_cntx_t    on_event_context;
     char          name[16];
-    bool          running;
+    volatile bool running;
 };
 
+/**
+ * @brief The main task function for the active object.
+ * @details This function runs in a separate FreeRTOS task and processes events from the
+ * active object's event queue. It calls the registered event handler for each event.
+ * @param arg A pointer to the active object instance.
+ */
 static void ao_task(void* arg)
 {
     ao_t* self = (ao_t*)arg;
+    configASSERT(self && self->q && self->on_event);
+    
     evt_cntx_t evt_ctx = self->on_event_context;
     ao_evt_t* evt = NULL;
 

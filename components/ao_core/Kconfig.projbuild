@@ -24,5 +24,11 @@ config AO_POST_TIMEOUT_MS
     default 100
     help
         Tiempo máximo de espera para encolar un evento cuando la cola está llena.
+    
+config AO_FSM_WATCHER_CBS
+    int "Máximo número de callbacks de watcher por FSM"
+    default 4
+    help
+        Número máximo de callbacks que una FSM puede registrar para eventos de watcher.
 
 endmenu
