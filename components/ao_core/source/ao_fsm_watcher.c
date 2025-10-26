@@ -70,7 +70,8 @@ static void watcher_task(void *arg)
             ESP_LOGW(TAG, "Overrun: ciclo tardo %u ms (> periodo %u ms)", 
                     (unsigned)pdTICKS_TO_MS(elapsed),(unsigned)watcher->intervalMs);
     }
-
+    
+    vTaskDelete(NULL);
 }
 
 ao_fsm_watcher_t* ao_fsm_watcher_start(ao_fsm_t* fsm, uint32_t interval_ms) 

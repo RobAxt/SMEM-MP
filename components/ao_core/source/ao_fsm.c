@@ -133,7 +133,7 @@ TimerHandle_t ao_fsm_timer_start(ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, ui
     ctx->fsm = fsm;
     ctx->event_type = event_type;
 
-    TimerHandle_t timer = xTimerCreate("fsm_timer", pdMS_TO_TICKS(period_ms), pdTRUE, (void*)ctx, timer_cb);
+    TimerHandle_t timer = xTimerCreate("fsm_timer", pdMS_TO_TICKS(period_ms), pdFALSE, (void*)ctx, timer_cb);
     if (!timer) 
     {
         free(ctx);
