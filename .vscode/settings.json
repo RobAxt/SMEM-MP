@@ -26,7 +26,8 @@
     "random": "c",
     "ao_fsm.h": "c",
     "esp_system.h": "c",
-    "stdbool.h": "c"
+    "stdbool.h": "c",
+    "security_ao_fsm.h": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }

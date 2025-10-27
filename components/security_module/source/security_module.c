@@ -12,6 +12,8 @@
 
 static const char *TAG = "security_module";
 
+hookCallback_onEvent security_onEvent_callbacks[MAX_EVENT] = { NULL };
+
 /**
  * @brief Security AO FSM pointer
  * @details This pointer holds the instance of the security AO FSM.
@@ -83,4 +85,15 @@ esp_err_t security_watchers_start(ao_fsm_t* security_fsm)
     // TODO: Implement actual watchers as needed
     
     return ESP_OK;
+}
+
+void security_set_hookCallbak_OnEvent(ao_fsm_evt_type_t event, hookCallback_onEvent cb )
+{
+    if(event >= MAX_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid event type for hooking callback: %d", event);
+        return;
+    }
+
+    security_onEvent_callbacks[event] = cb;
 }

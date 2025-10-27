@@ -20,8 +20,25 @@
 #include "esp_err.h"
 
 #include "ao_fsm.h"
+#include "security_ao_fsm.h"
 
+/**
+ * @brief Callback type for event notifications.
+ * @details This type defines a function pointer for callbacks that are invoked
+ *         when specific events occur in the security state machine.
+ * @param void No parameters.
+ * @return void No return value.
+ */
 typedef void (*hookCallback_onEvent) (void);
+
+/**
+ * @brief Array of callback functions for event notifications.
+ * @details This array holds the registered callback functions for each event type
+ *          in the security state machine. Each index corresponds to an event defined
+ *          in the security AO FSM.
+ */
+extern
+hookCallback_onEvent security_onEvent_callbacks[MAX_EVENT];
 
 /**
  * @brief Registers a callback for a specific event notification.
@@ -42,6 +59,6 @@ esp_err_t security_module_start(void);
  * @param cb Pointer to the callback function that will be executed when
  *           the event occurs.
  */
-void security_hookCallbak_OnEvent(ao_fsm_evt_type_t event, hookCallback_onEvent cb );
+void security_set_hookCallbak_OnEvent(ao_fsm_evt_type_t event, hookCallback_onEvent cb );
 
 #endif // SECURITY_MODULE_H

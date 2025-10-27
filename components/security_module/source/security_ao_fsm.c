@@ -7,6 +7,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
+#include "security_module.h"
 #include "security_ao_fsm.h"
 #include "security_watcher.h"
 #include "ao_core.h"
@@ -18,10 +19,19 @@
 
 static const char *TAG = "security_ao_fsm";
 
-
-
 static TimerHandle_t tagReadTimerHandle = NULL;
 static TimerHandle_t workingTimerHandle = NULL;
+
+/**
+ * @brief Stops and deletes a timer.
+ * @details This function stops the specified timer and sets its handle to NULL.
+ * @param timerHandle Pointer to the timer handle to stop and delete.
+ */
+static void security_stop_timer(TimerHandle_t timerHandle)
+{
+    ao_fsm_timer_stop(timerHandle);
+    timerHandle = NULL;
+}
 
 /**
  * @brief Starts the tag read timer.
@@ -42,7 +52,8 @@ static void security_start_tagRead_timer(ao_fsm_t *fsm)
 
         tagReadTimerHandle = ao_fsm_timer_start(fsm, READ_TAG_TIMEOUT_EVENT, SEC_TAGREAD_TIMER_MS);
     
-        if(tagReadTimerHandle == NULL) ESP_LOGE(TAG, "Failed to start tag read timer");
+        if(tagReadTimerHandle == NULL) 
+            ESP_LOGE(TAG, "Failed to start tag read timer");
     }
 }
 
@@ -65,19 +76,9 @@ static void security_start_working_timer(ao_fsm_t *fsm)
         
         workingTimerHandle = ao_fsm_timer_start(fsm, WORKING_TIMEOUT_EVENT, SEC_WORKING_TIMER_MS);
     
-        if(workingTimerHandle == NULL) ESP_LOGE(TAG, "Failed to start working timer");
+        if(workingTimerHandle == NULL) 
+            ESP_LOGE(TAG, "Failed to start working timer");
     }
-}
-
-/**
- * @brief Stops and deletes a timer.
- * @details This function stops the specified timer and sets its handle to NULL.
- * @param timerHandle Pointer to the timer handle to stop and delete.
- */
-static void security_stop_timer(TimerHandle_t timerHandle)
-{
-    ao_fsm_timer_stop(timerHandle);
-    timerHandle = NULL;
 }
 
 // Monitoring State Function Definition
@@ -90,39 +91,107 @@ ao_fsm_state_t security_monitoringState_intrusionDetected_action(ao_fsm_t *fsm, 
         return SEC_MONITORING_STATE;
     }
     ESP_LOGI(TAG, "Intrusion detected! Transitioning to VALIDATION_STATE.");
-    
-    ESP_LOGI(TAG, "Tag read timer activated.");
+
+    // Start tag read timer
     security_start_tagRead_timer(fsm);
+
+    // Notify intrusion detected event
+    if(security_onEvent_callbacks[INTRUSION_DETECTED_EVENT] != NULL)
+        security_onEvent_callbacks[INTRUSION_DETECTED_EVENT]();
 
     return SEC_VALIDATION_STATE;
 }
 
 ao_fsm_state_t security_monitoringState_panicButtonPressed_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
-    //TODO: Implement panic button handling
+    if(fsm == NULL || event == NULL || event->type != PANIC_BUTTON_PRESSED_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_monitoringState_panicButtonPressed_action");
+        return SEC_MONITORING_STATE;
+    }
+    ESP_LOGI(TAG, "Panic button pressed! Transitioning to VALIDATION_STATE.");
 
-    return SEC_MONITORING_STATE;
+    // Start tag read timer
+    security_start_tagRead_timer(fsm);
+
+    // Notify panic button pressed event
+    if(security_onEvent_callbacks[PANIC_BUTTON_PRESSED_EVENT] != NULL)
+        security_onEvent_callbacks[PANIC_BUTTON_PRESSED_EVENT]();
+
+    return SEC_VALIDATION_STATE;
 }
 
 ao_fsm_state_t security_monitoringState_turnLightsOn_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != TURN_LIGHTS_ON_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_monitoringState_turnLightsOn_action");
+        return SEC_MONITORING_STATE;
+    }
+    ESP_LOGI(TAG, "Turn lights on command received in MONITORING_STATE.");
+
+    //TODO: Implement turn lights on.
+
+    // Notify turn lights on event
+    if(security_onEvent_callbacks[TURN_LIGHTS_ON_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_LIGHTS_ON_EVENT]();
+    
     return SEC_MONITORING_STATE;
 }
 
 
 ao_fsm_state_t security_monitoringState_turnLightsOff_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != TURN_LIGHTS_OFF_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_monitoringState_turnLightsOff_action");
+        return SEC_MONITORING_STATE;
+    }
+    ESP_LOGI(TAG, "Turn lights off command received in MONITORING_STATE.");
+
+    // TODO: Implement turn lights off.
+
+    // Notify turn lights off event
+    if(security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT]();
+
     return SEC_MONITORING_STATE;
 }
 
 
 ao_fsm_state_t security_monitoringState_turnSirenOn_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != TURN_SIREN_ON_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_monitoringState_turnSirenOn_action");
+        return SEC_MONITORING_STATE;
+    }
+    ESP_LOGI(TAG, "Turn siren on command received in MONITORING_STATE.");
+
+    //TODO: Implement turn siren on.
+
+    // Notify turn siren on event
+    if(security_onEvent_callbacks[TURN_SIREN_ON_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_SIREN_ON_EVENT]();
+    
     return SEC_MONITORING_STATE;
 }
 
 ao_fsm_state_t security_monitoringState_turnSirenOff_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != TURN_SIREN_OFF_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_monitoringState_turnSirenOff_action");
+        return SEC_MONITORING_STATE;
+    }
+    ESP_LOGI(TAG, "Turn siren off command received in MONITORING_STATE.");
+
+    //TODO: Implement turn siren off.
+
+    // Notify turn siren off event
+    if(security_onEvent_callbacks[TURN_SIREN_OFF_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_SIREN_OFF_EVENT]();
+    
     return SEC_MONITORING_STATE;
 }
 
@@ -132,11 +201,46 @@ ao_fsm_state_t security_monitoringState_turnSirenOff_action(ao_fsm_t *fsm, const
 
 ao_fsm_state_t security_validationState_invalidTagEvent_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != INVALID_TAG_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_validationState_invalidTagEvent_action");
+        return SEC_VALIDATION_STATE;
+    }
+    ESP_LOGW(TAG, "Invalid tag read. Transitioning to ALARM_STATE.");
+
+    // Stop tag read timer
+    security_stop_timer(tagReadTimerHandle);
+
+    //TODO: Activate siren and lights.
+
+    // Notify invalid tag event
+    if(security_onEvent_callbacks[INVALID_TAG_EVENT] != NULL)
+        security_onEvent_callbacks[INVALID_TAG_EVENT]();
+
     return SEC_ALARM_STATE;
 }
 
 ao_fsm_state_t security_validationState_validTagEvent_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != VALID_TAG_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_validationState_validTagEvent_action");
+        return SEC_VALIDATION_STATE;
+    }
+    ESP_LOGI(TAG, "Valid tag read. Transitioning to NORMAL_STATE.");
+
+    // Stop tag read timer
+    security_stop_timer(tagReadTimerHandle);
+
+    //TODO: Deactivate siren and lights.
+
+    // Start working timer
+    security_start_working_timer(fsm);
+
+    // Notify valid tag event
+    if(security_onEvent_callbacks[VALID_TAG_EVENT] != NULL)
+        security_onEvent_callbacks[VALID_TAG_EVENT]();
+
     return SEC_NORMAL_STATE;
 }
 
@@ -149,7 +253,14 @@ ao_fsm_state_t security_validationState_tagReadTimeoutEvent_action(ao_fsm_t *fsm
     }
     ESP_LOGW(TAG, "Tag read timeout. Transitioning to ALARM_STATE.");
     
+    // Stop tag read timer
+    security_stop_timer(tagReadTimerHandle);
+
     //TODO: Activate siren and lights.
+
+    // Notify tag read timeout event
+    if(security_onEvent_callbacks[READ_TAG_TIMEOUT_EVENT] != NULL)
+        security_onEvent_callbacks[READ_TAG_TIMEOUT_EVENT]();
 
     return SEC_ALARM_STATE;
 }
@@ -160,14 +271,76 @@ ao_fsm_state_t security_validationState_tagReadTimeoutEvent_action(ao_fsm_t *fsm
 
 ao_fsm_state_t security_alarmState_invalidTagEvent_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != INVALID_TAG_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_alarmState_invalidTagEvent_action");
+        return SEC_ALARM_STATE;
+    }
+    ESP_LOGI(TAG, "Invalid tag event received in ALARM_STATE. Staying in ALARM_STATE.");
+
+    // Notify invalid tag event
+    if(security_onEvent_callbacks[INVALID_TAG_EVENT] != NULL)
+        security_onEvent_callbacks[INVALID_TAG_EVENT]();
+
     return SEC_ALARM_STATE;
 }
 
 ao_fsm_state_t security_alarmState_validTagEvent_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != VALID_TAG_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_alarmState_validTagEvent_action");
+        return SEC_ALARM_STATE;
+    }
+    ESP_LOGI(TAG, "Valid tag event received in ALARM_STATE. Transitioning to NORMAL_STATE.");
+
+    //TODO: Stop siren and lights
+
+    // Start working timer
+    security_start_working_timer(fsm);
+
+    // Notify valid tag event
+    if(security_onEvent_callbacks[VALID_TAG_EVENT] != NULL)
+        security_onEvent_callbacks[VALID_TAG_EVENT]();
+
     return SEC_NORMAL_STATE;
 }
 
+ao_fsm_state_t security_alarmState_turnLightsOff_action(ao_fsm_t *fsm, const ao_evt_t *event)
+{
+    if(fsm == NULL || event == NULL || event->type != TURN_LIGHTS_OFF_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_alarmState_turnLightsOff_action");
+        return SEC_ALARM_STATE;
+    }
+    ESP_LOGI(TAG, "Turn lights off command received in ALARM_STATE.");
+
+    //TODO: Implement turn lights off.
+
+    // Notify turn lights off event
+    if(security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT]();
+    
+    return SEC_ALARM_STATE;
+}
+
+ao_fsm_state_t security_alarmState_turnSirenOff_action(ao_fsm_t *fsm, const ao_evt_t *event)
+{
+    if(fsm == NULL || event == NULL || event->type != TURN_SIREN_OFF_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_alarmState_turnSirenOff_action");
+        return SEC_ALARM_STATE;
+    }
+    ESP_LOGI(TAG, "Turn siren off command received in ALARM_STATE.");
+
+    //TODO: Implement turn siren off.
+
+    // Notify turn siren off event
+    if(security_onEvent_callbacks[TURN_SIREN_OFF_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_SIREN_OFF_EVENT]();
+    
+    return SEC_ALARM_STATE;
+}
 // ---------------------------------------------------------------------------------------------------------
 
 // Normal State Function Definition
@@ -181,32 +354,97 @@ ao_fsm_state_t security_normalState_workingTimeoutEvent_action(ao_fsm_t *fsm, co
     }
     ESP_LOGI(TAG, "Working timeout event received. Transitioning to MONITORING_STATE.");
     
-    security_stop_timer(&workingTimerHandle);
+    security_stop_timer(workingTimerHandle);
 
-    //TODO: Implement working timeout handling
+    // Notify working timeout event
+    if(security_onEvent_callbacks[WORKING_TIMEOUT_EVENT] != NULL)
+        security_onEvent_callbacks[WORKING_TIMEOUT_EVENT]();
     
     return SEC_NORMAL_STATE;
 }
 
 ao_fsm_state_t security_normalState_panicButtonPressed_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != PANIC_BUTTON_PRESSED_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_normalState_panicButtonPressed_action");
+        return SEC_NORMAL_STATE;
+    }
+    ESP_LOGI(TAG, "Panic button pressed! Transitioning to VALIDATION_STATE.");
+
+    // Notify panic button pressed event
+    if(security_onEvent_callbacks[PANIC_BUTTON_PRESSED_EVENT] != NULL)
+        security_onEvent_callbacks[PANIC_BUTTON_PRESSED_EVENT]();
+    
     return SEC_NORMAL_STATE;
 }
 
 ao_fsm_state_t security_normalState_turnLightsOn_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != TURN_LIGHTS_ON_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_normalState_turnLightsOn_action");
+        return SEC_NORMAL_STATE;
+    }
+    ESP_LOGI(TAG, "Turn lights on command received in NORMAL_STATE.");
+
+    //TODO: Implement turn lights on.
+    
+    // Notify turn lights on event
+    if(security_onEvent_callbacks[TURN_LIGHTS_ON_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_LIGHTS_ON_EVENT]();
+    
     return SEC_NORMAL_STATE;
 }
 ao_fsm_state_t security_normalState_turnLightsOff_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != TURN_LIGHTS_OFF_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_normalState_turnLightsOff_action");
+        return SEC_NORMAL_STATE;
+    }
+    ESP_LOGI(TAG, "Turn lights off command received in NORMAL_STATE.");
+
+    //TODO: Implement turn lights off.
+
+    // Notify turn lights off event
+    if(security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT]();
+    
     return SEC_NORMAL_STATE;
 }
 ao_fsm_state_t security_normalState_turnSirenOn_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != TURN_SIREN_ON_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_normalState_turnSirenOn_action");
+        return SEC_NORMAL_STATE;
+    }
+    ESP_LOGI(TAG, "Turn siren on command received in NORMAL_STATE.");
+
+    //TODO: Implement turn siren on.
+
+    // Notify turn siren on event
+    if(security_onEvent_callbacks[TURN_SIREN_ON_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_SIREN_ON_EVENT]();
+    
     return SEC_NORMAL_STATE;
 }
 
 ao_fsm_state_t security_normalState_turnSirenOff_action(ao_fsm_t *fsm, const ao_evt_t *event)
 {
+    if(fsm == NULL || event == NULL || event->type != TURN_SIREN_OFF_EVENT) 
+    {
+        ESP_LOGE(TAG, "Invalid parameters in security_normalState_turnSirenOff_action");
+        return SEC_NORMAL_STATE;
+    }
+    ESP_LOGI(TAG, "Turn siren off command received in NORMAL_STATE.");
+
+    //TODO: Implement turn siren off.
+
+    // Notify turn siren off event
+    if(security_onEvent_callbacks[TURN_SIREN_OFF_EVENT] != NULL)
+        security_onEvent_callbacks[TURN_SIREN_OFF_EVENT]();
+    
     return SEC_NORMAL_STATE;
 }

@@ -34,7 +34,7 @@ enum { INTRUSION_DETECTED_EVENT = 0, PANIC_BUTTON_PRESSED_EVENT = 1, TURN_LIGHTS
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event: Validation
  * @note This function is called when an intrusion is detected with the PIR sensor while in 
- *       the monitoring state. Also must start the tag read timer.
+ *       the monitoring state. Also must start the tag read timer. It transitions the FSM back to the validation state.
  */
 ao_fsm_state_t security_monitoringState_intrusionDetected_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
@@ -44,43 +44,47 @@ ao_fsm_state_t security_monitoringState_intrusionDetected_action(ao_fsm_t *fsm, 
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event: Validation
  * @note This function is called when the panic button is pressed while in the monitoring state.
- *       Also must start the tag read timer.
+ *       Also must start the tag read timer. It transitions the FSM back to the validation state.
  */
 ao_fsm_state_t security_monitoringState_panicButtonPressed_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
 /**
- * @brief Action function for handling
+ * @brief Action function for handling the turn on lights command event in monitoring state.
  * @param fsm Pointer to the finite state machine instance.
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event:
- * @note This function is called when
+ * @note This function is called when the turn on lights command event in monitoring state is received.
+ *       It transitions the FSM back to the monitoring state.
  */
 ao_fsm_state_t security_monitoringState_turnLightsOn_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
 /**
- * @brief Action function for handling
+ * @brief Action function for handling the turn off lights command event in monitoring state.
  * @param fsm Pointer to the finite state machine instance.
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event:
- * @note This function is called when
+ * @note This function is called when the turn off lights command event in monitoring state is received.
+ *       It transitions the FSM back to the monitoring state.
  */
 ao_fsm_state_t security_monitoringState_turnLightsOff_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
 /**
- * @brief Action function for handling
+ * @brief Action function for handling the turn on siren command on event in monitoring state.
  * @param fsm Pointer to the finite state machine instance.
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event:
- * @note This function is called when
+ * @note This function is called when the turn on siren command event in monitoring state is received.
+ *       It transitions the FSM back to the monitoring state.
  */
 ao_fsm_state_t security_monitoringState_turnSirenOn_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
 /**
- * @brief Action function for handling
+ * @brief Action function for handling the turn off siren command on event in monitoring state.
  * @param fsm Pointer to the finite state machine instance.
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event:
- * @note This function is called when
+ * @note This function is called when the turn off siren command event in monitoring state is received.
+ *       It transitions the FSM back to the monitoring state.
  */
 ao_fsm_state_t security_monitoringState_turnSirenOff_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
@@ -94,7 +98,7 @@ ao_fsm_state_t security_monitoringState_turnSirenOff_action(ao_fsm_t *fsm, const
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event: Alarm
  * @note This function is called when an invalid read of a RFID Tag occurs. Also must stop the read
- *       tag timer and turn on the lights and siren.
+ *       tag timer and turn on the lights and siren. It transitions the FSM to the alarm state.
  */
 ao_fsm_state_t security_validationState_invalidTagEvent_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
@@ -104,7 +108,7 @@ ao_fsm_state_t security_validationState_invalidTagEvent_action(ao_fsm_t *fsm, co
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event: Normal
  * @note his function is called when a valid read of a RFID Tag occurs. Also must stop the timer,
- *       turn off the lights and siren and start the working timer.
+ *       turn off the lights and siren and start the working timer. It transitions the FSM to the normal state.
  */
 ao_fsm_state_t security_validationState_validTagEvent_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
@@ -114,7 +118,7 @@ ao_fsm_state_t security_validationState_validTagEvent_action(ao_fsm_t *fsm, cons
  * @param event Pointer to the event that triggered the action.
  * @return The next state of the FSM after handling the event: Alarm
  * @note This function is called when a tag read operation times out while in the validation state.
- *       Also must stop the read tag timer and turn on the lights and siren.
+ *       Also must stop the read tag timer and turn on the lights and siren. It transitions the FSM to the alarm state.
  */
 ao_fsm_state_t security_validationState_tagReadTimeoutEvent_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
@@ -123,23 +127,45 @@ ao_fsm_state_t security_validationState_tagReadTimeoutEvent_action(ao_fsm_t *fsm
 // Alarm State Function Prototipe
 
 /**
- * @brief
+ * @brief Action function for handling invalid tag event in alarm state.
  * @param fsm Pointer to the finite state machine instance.
  * @param event Pointer to the event that triggered the action.
- * @return The next state of the FSM after handling the event.
- * @note
+ * @return The next state of the FSM after handling the event: Alarm
+ * @note This function is called when an invalid tag event is received while in the alarm state.
+ *       It transitions the FSM back to the alarm state.
  */
 ao_fsm_state_t security_alarmState_invalidTagEvent_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
 /**
- * @brief
+ * @brief Action function for handling valid tag event in alarm state.
  * @param fsm Pointer to the finite state machine instance.
  * @param event Pointer to the event that triggered the action.
- * @return The next state of the FSM after handling the event: Alarm
- * @note
+ * @return The next state of the FSM after handling the event: Normal
+ * @note This function is called when a valid tag event is received while in the alarm state.
+ *       Also must start the working timer, turn the light and siren off.
+ *       It transitions the FSM to the normal state.
  */
 ao_fsm_state_t security_alarmState_validTagEvent_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
+/**
+ * @brief Action function for handling turn lights off event in alarm state.
+ * @param fsm Pointer to the finite state machine instance.
+ * @param event Pointer to the event that triggered the action.
+ * @return The next state of the FSM after handling the event: Alarm
+ * @note This function is called when a turn lights off command is received while in the alarm state.
+ *       It transitions the FSM back to the alarm state.
+ */
+ao_fsm_state_t security_alarmState_turnLightsOff_action(ao_fsm_t *fsm, const ao_evt_t *event);
+
+/**
+ * @brief Action function for handling turn siren off event in alarm state.
+ * @param fsm Pointer to the finite state machine instance.
+ * @param event Pointer to the event that triggered the action.
+ * @return The next state of the FSM after handling the event: Alarm
+ * @note This function is called when a turn siren off command is received while in the alarm state.
+ *       It transitions the FSM back to the alarm state.
+ */
+ao_fsm_state_t security_alarmState_turnSirenOff_action(ao_fsm_t *fsm, const ao_evt_t *event);
 // ---------------------------------------------------------------------------------------------------------
 
 // Normal State Function Prototipe
@@ -155,25 +181,55 @@ ao_fsm_state_t security_alarmState_validTagEvent_action(ao_fsm_t *fsm, const ao_
 ao_fsm_state_t security_normalState_workingTimeoutEvent_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
 /**
- * @brief
+ * @brief Action function for handling panic button pressed event in normal state.
  * @param fsm Pointer to the finite state machine instance.
  * @param event Pointer to the event that triggered the action.
- * @return The next state of the FSM after handling the event.
- * @note
+ * @return The next state of the FSM after handling the event: Normal
+ * @note This function is called when the panic button is pressed while in the normal state.
+ *       It transitions the FSM back to the normal state.
  */
 ao_fsm_state_t security_normalState_panicButtonPressed_action(ao_fsm_t *fsm, const ao_evt_t *event);
 
 /**
- * @brief Action function for handling
+ * @brief Action function for handling the turn on lights command event in normal state.
  * @param fsm Pointer to the finite state machine instance.
  * @param event Pointer to the event that triggered the action.
- * @return The next state of the FSM after handling the event:
- * @note This function is called when
+ * @return The next state of the FSM after handling the event: Normal
+ * @note This function is called when the turn on lights command event in normal state is received.
+ *       It transitions the FSM back to the normal state.
  */
 ao_fsm_state_t security_normalState_turnLightsOn_action(ao_fsm_t *fsm, const ao_evt_t *event);
+
+/**
+ * @brief Action function for handling the turn off lights command event in normal state.
+ * @param fsm Pointer to the finite state machine instance.
+ * @param event Pointer to the event that triggered the action.
+ * @return The next state of the FSM after handling the event: Normal
+ * @note This function is called when the turn off lights command event in normal state is received.
+ *       It transitions the FSM back to the normal state.
+ */
 ao_fsm_state_t security_normalState_turnLightsOff_action(ao_fsm_t *fsm, const ao_evt_t *event);
+
+/**
+ * @brief Action function for handling the turn on siren command on event in normal state.
+ * @param fsm Pointer to the finite state machine instance.
+ * @param event Pointer to the event that triggered the action.
+ * @return The next state of the FSM after handling the event: Normal
+ * @note This function is called when the turn on siren command event in normal state is received.
+ *       It transitions the FSM back to the normal state.
+ */
 ao_fsm_state_t security_normalState_turnSirenOn_action(ao_fsm_t *fsm, const ao_evt_t *event);
+
+/**
+ * @brief Action function for handling the turn off siren command on event in normal state.
+ * @param fsm Pointer to the finite state machine instance.
+ * @param event Pointer to the event that triggered the action.
+ * @return The next state of the FSM after handling the event: Normal
+ * @note This function is called when the turn off siren command event in normal state is received.
+ *       It transitions the FSM back to the normal state.
+ */
 ao_fsm_state_t security_normalState_turnSirenOff_action(ao_fsm_t *fsm, const ao_evt_t *event);
+
 /**
  * @brief State transition table for the Security AO FSM.
  * @details This table defines the state transitions for the Security AO FSM,
@@ -199,6 +255,10 @@ static ao_fsm_transition_t security_fsm_transitions[] =
     // Alarm State
     { SEC_ALARM_STATE,      INVALID_TAG_EVENT,          security_alarmState_invalidTagEvent_action },
     { SEC_ALARM_STATE,      VALID_TAG_EVENT,            security_alarmState_validTagEvent_action },
+
+    // Global Commands on Alarm
+    { SEC_ALARM_STATE,      TURN_LIGHTS_OFF_EVENT,      security_alarmState_turnLightsOff_action },     
+    { SEC_ALARM_STATE,      TURN_SIREN_OFF_EVENT,       security_alarmState_turnSirenOff_action  },    
 
     // Normal    
     { SEC_NORMAL_STATE,     WORKING_TIMEOUT_EVENT,      security_normalState_workingTimeoutEvent_action },
