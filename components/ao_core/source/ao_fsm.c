@@ -15,6 +15,11 @@
 
 static const char *TAG = "ao_fsm";
 
+/**
+ * @brief Definition of the finite state machine (FSM) structure.
+ * @details This structure represents a finite state machine associated with an active object.
+ * It contains a pointer to the active object, the current state, and the state transition table.
+ */
 struct ao_fsm_s 
 {
     ao_t* owner;
@@ -23,13 +28,25 @@ struct ao_fsm_s
     ao_fsm_state_t current_state;
 };
 
+/**
+ * @brief Definition of the FSM timer context structure.
+ * @details This structure holds the context for the FSM timer, including a pointer to the FSM
+ * and the event type to be posted when the timer expires.
+ */
 typedef struct
 {
     ao_fsm_t *fsm;
     ao_fsm_evt_type_t event_type;
 } ao_fsm_timer_t;
 
-
+/**
+ * @brief Internal event handler for the finite state machine (FSM).
+ * @details This function is called by the active object when an event is posted to it.
+ * It processes the event according to the current state and the state transition table,
+ * executing the corresponding action handler and updating the current state.
+ * @param evt_ctx The context of the event, which is a pointer to the FSM instance.
+ * @param evt A pointer to the event being processed.
+ */
 static void ao_fsm_handler(evt_cntx_t evt_ctx, const ao_fsm_evt_t* evt) 
 {
     size_t i;
@@ -116,7 +133,7 @@ TimerHandle_t ao_fsm_timer_start(ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, ui
     ctx->fsm = fsm;
     ctx->event_type = event_type;
 
-    TimerHandle_t timer = xTimerCreate("fsm_timer", pdMS_TO_TICKS(period_ms), pdTRUE, (void*)ctx, timer_cb);
+    TimerHandle_t timer = xTimerCreate("fsm_timer", pdMS_TO_TICKS(period_ms), pdFALSE, (void*)ctx, timer_cb);
     if (!timer) 
     {
         free(ctx);

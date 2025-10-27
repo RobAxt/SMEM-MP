@@ -27,7 +27,9 @@
     "ao_fsm.h": "c",
     "esp_system.h": "c",
     "stdbool.h": "c",
-    "security_ao_fsm.h": "c"
+    "security_ao_fsm.h": "c",
+    "ao_fsm_watcher.h": "c",
+    "chrono": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }
