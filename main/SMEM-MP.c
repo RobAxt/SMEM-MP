@@ -23,12 +23,12 @@ void app_main(void)
     
     // Application code ends here
     
-    while (1)
-    {
-        ESP_LOGD(TAG, "SMEM-MP is running...");
-        // Application code begins here
-        //...
-        // Application code ends here
-        vTaskDelay(pdMS_TO_TICKS(5000));
-    }
+    // while (1)
+    // {
+    //     ESP_LOGD(TAG, "SMEM-MP is running...");
+    //     // Application code begins here
+    //     //...
+    //     // Application code ends here
+    //     vTaskDelay(pdMS_TO_TICKS(5000));
+    // }
 }

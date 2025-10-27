@@ -5,10 +5,13 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
+#include "ao_core.h"
+#include "ao_fsm_watcher.h"
 #include "security_module.h"
 #include "security_ao_fsm.h"
-#include "ao_core.h"
 #include "security_watcher.h"
+
+#define WATCHER_INTERVAL_MS 1500
 
 static const char *TAG = "security_module";
 
@@ -82,7 +85,30 @@ esp_err_t security_watchers_start(ao_fsm_t* security_fsm)
 {
     ESP_LOGI(TAG, "Starting security watchers...");
 
-    // TODO: Implement actual watchers as needed
+    ao_fsm_watcher_t* watcher = ao_fsm_watcher_start(security_fsm, WATCHER_INTERVAL_MS);
+
+    if(watcher == NULL) 
+    {
+        ESP_LOGE(TAG, "Failed to start security FSM watcher.");
+        return ESP_FAIL;
+    }
+
+    esp_err_t err = security_watcher_devices_start();
+    if(err != ESP_OK) 
+    {
+        ESP_LOGE(TAG, "Failed to start security watcher. err=%s (0x%x)", esp_err_to_name(err), err);
+        return err;
+    }
+
+    esp_err_t err1 = ao_fsm_watcher_add_callback(watcher, security_tagReader);
+    esp_err_t err2 = ao_fsm_watcher_add_callback(watcher, security_panicButtonReader);
+    esp_err_t err3 = ao_fsm_watcher_add_callback(watcher, security_pirSensorReader);
+
+    if (err1 != ESP_OK || err2 != ESP_OK || err3 != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to add callback to security FSM watcher.");
+        return ESP_FAIL;
+    }
     
     return ESP_OK;
 }
