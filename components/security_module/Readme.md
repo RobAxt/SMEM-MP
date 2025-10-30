@@ -18,40 +18,14 @@ stateDiagram-v2
         state2 --> state4 : validTag_Event       
         state2 --> state3 : invalidTag_Event
         state2 --> state3 : tagReadTimeout_Event
-        state4 --> state4 : turn_X_On/Off_Event
         state3 --> state4 : validTag_Event       
         state3 --> state3 : invalidTag_Event
         state4 --> state1 : workingTimeout_Event
-        state1 --> state1 : turn_X_On/Off_Event
         state4 --> state3 : PushButton_Event
     }
 ```
 
 ## Estados y Eventos
-
-### SEC_MONITORING_STATE && TURN_LIGHTS_ON_EVENT
-- Estando en el estado monitor y se recibe el evento de "encender luces".
-- Se ejecuta la accion de encender luces.
-- Se mantiene en el estado monitor.
-- Sería necesario disponer de un hook a un callback para que otro módulo pueda recibir confirmación del encendido de luces.
-
-### SEC_MONITORING_STATE && TURN_LIGHTS_OFF_EVENT
-- Estando en el estado monitor y se recibe el evento de "apagar luces"
-- Se ejecuta la accion de apagar luces.
-- Se mantiene en el estado monitor. 
-- Sería necesario disponer de un hook a un callback para que otro módulo pueda recibir confirmación del apagado de luces.
-
-### SEC_MONITORING_STATE && TURN_SIREN_ON_EVENT
-- Estando en el estado monitor y se recibe el evento de "encender sirena".
-- Se ejecuta la accion de encender sirena.
-- Se mantiene en el estado monitor. 
-- Sería necesario disponer de un hook a un callback para que otro módulo pueda recibir confirmación del encendido de la sirena.
-
-### SEC_MONITORING_STATE && TURN_SIREN_OFF_EVENT
-- Estando en el estado monitor y se recibe el evento de "apagar sirena".
-- Se ejecuta la accion de apagar sirena.
-- Se mantiene en el estado monitor. 
-- Sería necesario disponer de un hook a un callback para que otro módulo pueda recibir confirmación del apagado de la sirena.
 
 ### SEC_MONITORING_STATE && INTRUSION_DETECTED_EVENT
 - Estando en el estado monitor y se recibe el evento "intrusión detectada", que fue generada por la activacion del sensor PIR.

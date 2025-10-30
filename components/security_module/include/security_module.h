@@ -29,7 +29,7 @@
  * @param void No parameters.
  * @return void No return value.
  */
-typedef void (*hookCallback_onEvent) (void);
+typedef void (*hookCallback_onEvent)(void);
 
 /**
  * @brief Array of callback functions for event notifications.

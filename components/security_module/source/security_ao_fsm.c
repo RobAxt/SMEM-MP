@@ -138,7 +138,8 @@ ao_fsm_state_t security_monitoringState_turnLightsOn_action(ao_fsm_t *fsm, const
     }
     ESP_LOGI(TAG, "Turn lights on command received in MONITORING_STATE.");
 
-    //TODO: Implement turn lights on.
+    // Turn lights on.
+    security_turnLights_on();
 
     // Notify turn lights on event
     if(security_onEvent_callbacks[TURN_LIGHTS_ON_EVENT] != NULL)
@@ -157,7 +158,8 @@ ao_fsm_state_t security_monitoringState_turnLightsOff_action(ao_fsm_t *fsm, cons
     }
     ESP_LOGI(TAG, "Turn lights off command received in MONITORING_STATE.");
 
-    // TODO: Implement turn lights off.
+    // Turn lights off.
+    security_turnLights_off();
 
     // Notify turn lights off event
     if(security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT] != NULL)
@@ -176,7 +178,8 @@ ao_fsm_state_t security_monitoringState_turnSirenOn_action(ao_fsm_t *fsm, const 
     }
     ESP_LOGI(TAG, "Turn siren on command received in MONITORING_STATE.");
 
-    //TODO: Implement turn siren on.
+    //Turn siren on.
+    security_turnSiren_on();
 
     // Notify turn siren on event
     if(security_onEvent_callbacks[TURN_SIREN_ON_EVENT] != NULL)
@@ -194,7 +197,8 @@ ao_fsm_state_t security_monitoringState_turnSirenOff_action(ao_fsm_t *fsm, const
     }
     ESP_LOGI(TAG, "Turn siren off command received in MONITORING_STATE.");
 
-    //TODO: Implement turn siren off.
+    //Turn siren off.
+    security_turnSiren_off();
 
     // Notify turn siren off event
     if(security_onEvent_callbacks[TURN_SIREN_OFF_EVENT] != NULL)
@@ -220,7 +224,9 @@ ao_fsm_state_t security_validationState_invalidTagEvent_action(ao_fsm_t *fsm, co
     security_stop_timer(tagReadTimerHandle);
     security_stop_timer(workingTimerHandle);
 
-    //TODO: Activate siren and lights.
+    // Activate siren and lights.
+    security_turnLights_on();
+    security_turnSiren_on();
 
     // Notify invalid tag event
     if(security_onEvent_callbacks[INVALID_TAG_EVENT] != NULL)
@@ -241,7 +247,9 @@ ao_fsm_state_t security_validationState_validTagEvent_action(ao_fsm_t *fsm, cons
     // Stop tag read timer
     security_stop_timer(tagReadTimerHandle);
 
-    //TODO: Deactivate siren and lights.
+    // Deactivate siren and lights.
+    security_turnLights_off();
+    security_turnSiren_off();
 
     // Start working timer
     security_start_working_timer(fsm);
@@ -265,7 +273,9 @@ ao_fsm_state_t security_validationState_tagReadTimeoutEvent_action(ao_fsm_t *fsm
     // Stop tag read timer
     security_stop_timer(tagReadTimerHandle);
 
-    //TODO: Activate siren and lights.
+    // Activate siren and lights.
+    security_turnLights_on();
+    security_turnSiren_on();
 
     // Notify tag read timeout event
     if(security_onEvent_callbacks[READ_TAG_TIMEOUT_EVENT] != NULL)
@@ -303,7 +313,9 @@ ao_fsm_state_t security_alarmState_validTagEvent_action(ao_fsm_t *fsm, const ao_
     }
     ESP_LOGI(TAG, "Valid tag event received in ALARM_STATE. Transitioning to NORMAL_STATE.");
 
-    //TODO: Stop siren and lights
+    // Deactivate siren and lights.
+    security_turnLights_off();
+    security_turnSiren_off();
 
     // Start working timer
     security_start_working_timer(fsm);
@@ -324,7 +336,8 @@ ao_fsm_state_t security_alarmState_turnLightsOff_action(ao_fsm_t *fsm, const ao_
     }
     ESP_LOGI(TAG, "Turn lights off command received in ALARM_STATE.");
 
-    //TODO: Implement turn lights off.
+    // Turn lights off.
+    security_turnLights_off();
 
     // Notify turn lights off event
     if(security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT] != NULL)
@@ -342,7 +355,8 @@ ao_fsm_state_t security_alarmState_turnSirenOff_action(ao_fsm_t *fsm, const ao_e
     }
     ESP_LOGI(TAG, "Turn siren off command received in ALARM_STATE.");
 
-    //TODO: Implement turn siren off.
+    // Turn siren off.
+    security_turnSiren_off();
 
     // Notify turn siren off event
     if(security_onEvent_callbacks[TURN_SIREN_OFF_EVENT] != NULL)
@@ -402,7 +416,8 @@ ao_fsm_state_t security_normalState_turnLightsOn_action(ao_fsm_t *fsm, const ao_
     }
     ESP_LOGI(TAG, "Turn lights on command received in NORMAL_STATE.");
 
-    //TODO: Implement turn lights on.
+    // Turn lights on.
+    security_turnLights_on();
     
     // Notify turn lights on event
     if(security_onEvent_callbacks[TURN_LIGHTS_ON_EVENT] != NULL)
@@ -419,7 +434,8 @@ ao_fsm_state_t security_normalState_turnLightsOff_action(ao_fsm_t *fsm, const ao
     }
     ESP_LOGI(TAG, "Turn lights off command received in NORMAL_STATE.");
 
-    //TODO: Implement turn lights off.
+    // Turn lights off.
+    security_turnLights_off();
 
     // Notify turn lights off event
     if(security_onEvent_callbacks[TURN_LIGHTS_OFF_EVENT] != NULL)
@@ -436,7 +452,8 @@ ao_fsm_state_t security_normalState_turnSirenOn_action(ao_fsm_t *fsm, const ao_e
     }
     ESP_LOGI(TAG, "Turn siren on command received in NORMAL_STATE.");
 
-    //TODO: Implement turn siren on.
+    // Turn siren on.
+    security_turnSiren_on();
 
     // Notify turn siren on event
     if(security_onEvent_callbacks[TURN_SIREN_ON_EVENT] != NULL)
@@ -454,7 +471,8 @@ ao_fsm_state_t security_normalState_turnSirenOff_action(ao_fsm_t *fsm, const ao_
     }
     ESP_LOGI(TAG, "Turn siren off command received in NORMAL_STATE.");
 
-    //TODO: Implement turn siren off.
+    // Turn siren off.
+    security_turnSiren_off();
 
     // Notify turn siren off event
     if(security_onEvent_callbacks[TURN_SIREN_OFF_EVENT] != NULL)

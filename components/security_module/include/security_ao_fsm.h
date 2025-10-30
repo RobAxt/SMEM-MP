@@ -242,10 +242,10 @@ static ao_fsm_transition_t security_fsm_transitions[] =
     { SEC_MONITORING_STATE, PANIC_BUTTON_PRESSED_EVENT, security_monitoringState_panicButtonPressed_action },
 
     // Global Commands on Monitoring
-    { SEC_MONITORING_STATE, TURN_LIGHTS_ON_EVENT,       security_monitoringState_turnLightsOn_action  },     
-    { SEC_MONITORING_STATE, TURN_LIGHTS_OFF_EVENT,      security_monitoringState_turnLightsOff_action },     
-    { SEC_MONITORING_STATE, TURN_SIREN_ON_EVENT,        security_monitoringState_turnSirenOn_action   },     
-    { SEC_MONITORING_STATE, TURN_SIREN_OFF_EVENT,       security_monitoringState_turnSirenOff_action  },    
+    // { SEC_MONITORING_STATE, TURN_LIGHTS_ON_EVENT,       security_monitoringState_turnLightsOn_action  },
+    // { SEC_MONITORING_STATE, TURN_LIGHTS_OFF_EVENT,      security_monitoringState_turnLightsOff_action },
+    // { SEC_MONITORING_STATE, TURN_SIREN_ON_EVENT,        security_monitoringState_turnSirenOn_action   },
+    // { SEC_MONITORING_STATE, TURN_SIREN_OFF_EVENT,       security_monitoringState_turnSirenOff_action  },
 
     // Validation State
     { SEC_VALIDATION_STATE, INVALID_TAG_EVENT,          security_validationState_invalidTagEvent_action },
@@ -257,8 +257,8 @@ static ao_fsm_transition_t security_fsm_transitions[] =
     { SEC_ALARM_STATE,      VALID_TAG_EVENT,            security_alarmState_validTagEvent_action },
 
     // Global Commands on Alarm
-    { SEC_ALARM_STATE,      TURN_LIGHTS_OFF_EVENT,      security_alarmState_turnLightsOff_action },     
-    { SEC_ALARM_STATE,      TURN_SIREN_OFF_EVENT,       security_alarmState_turnSirenOff_action  },    
+    // { SEC_ALARM_STATE,      TURN_LIGHTS_OFF_EVENT,      security_alarmState_turnLightsOff_action },
+    // { SEC_ALARM_STATE,      TURN_SIREN_OFF_EVENT,       security_alarmState_turnSirenOff_action  },
 
     // Normal    
     { SEC_NORMAL_STATE,     WORKING_TIMEOUT_EVENT,      security_normalState_workingTimeoutEvent_action },
@@ -267,10 +267,10 @@ static ao_fsm_transition_t security_fsm_transitions[] =
     { SEC_NORMAL_STATE,     PANIC_BUTTON_PRESSED_EVENT, security_normalState_panicButtonPressed_action },
 
     // Global Commands on Normal
-    { SEC_NORMAL_STATE,     TURN_LIGHTS_ON_EVENT,       security_normalState_turnLightsOn_action  },
-    { SEC_NORMAL_STATE,     TURN_LIGHTS_OFF_EVENT,      security_normalState_turnLightsOff_action },
-    { SEC_NORMAL_STATE,     TURN_SIREN_ON_EVENT,        security_normalState_turnSirenOn_action   },
-    { SEC_NORMAL_STATE,     TURN_SIREN_OFF_EVENT,       security_normalState_turnSirenOff_action  }   
+    // { SEC_NORMAL_STATE,     TURN_LIGHTS_ON_EVENT,       security_normalState_turnLightsOn_action  },
+    // { SEC_NORMAL_STATE,     TURN_LIGHTS_OFF_EVENT,      security_normalState_turnLightsOff_action },
+    // { SEC_NORMAL_STATE,     TURN_SIREN_ON_EVENT,        security_normalState_turnSirenOn_action   },
+    // { SEC_NORMAL_STATE,     TURN_SIREN_OFF_EVENT,       security_normalState_turnSirenOff_action  }   
 
 };
 

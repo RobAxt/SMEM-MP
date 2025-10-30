@@ -112,41 +112,60 @@ void security_tagReader(ao_fsm_t* fsm)
 
 void security_panicButtonReader(ao_fsm_t* fsm)
 {
-    // Read panic button state from MCP23017
+    static uint8_t last_state = 0xFF;  // Initial assumption: all inputs are HIGH (button released)
     uint8_t gpioa_state;
+
+    // Read GPIOA inputs from the MCP23017 expander
     esp_err_t err = i2c_mcp23017_read_gpioa_inputs(&gpioa_state);
-    if(err != ESP_OK) 
+    if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to read GPIOA from MCP23017. err=%s (0x%x)", esp_err_to_name(err), err);
         return;
     }
 
-    // Check if panic button is pressed (assuming active low)
-    if((gpioa_state & PANIC_BUTTON_MASK) == 0) 
+    // Panic button is active low
+    bool current_pressed = (gpioa_state & PANIC_BUTTON_MASK) == 0;
+    bool last_pressed    = (last_state & PANIC_BUTTON_MASK) == 0;
+
+    // Detect falling edge: HIGH → LOW (released → pressed)
+    if (!last_pressed && current_pressed)
     {
-        ESP_LOGI(TAG, "Panic button pressed");
+        ESP_LOGI(TAG, "Panic button pressed (falling edge detected)");
         ao_fsm_post(fsm, PANIC_BUTTON_PRESSED_EVENT, NULL, 0);
     }
+
+    // Save current state for next comparison
+    last_state = gpioa_state;
 }
 
 void security_pirSensorReader(ao_fsm_t* fsm)
 {
-    // Read PIR sensor state from MCP23017
+    static uint8_t last_state = 0xFF;  // Initial assumption: all inputs are HIGH (no motion detected)
     uint8_t gpioa_state;
+
+    // Read GPIOA inputs from the MCP23017 expander
     esp_err_t err = i2c_mcp23017_read_gpioa_inputs(&gpioa_state);
-    if(err != ESP_OK) 
+    if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to read GPIOA from MCP23017. err=%s (0x%x)", esp_err_to_name(err), err);
         return;
     }
 
-    // Check if PIR sensor is Active (assuming active low)
-    if((gpioa_state & PIR_SENSOR_MASK) == 0) 
+    // PIR sensor is active low
+    bool current_active = (gpioa_state & PIR_SENSOR_MASK) == 0;
+    bool last_active    = (last_state & PIR_SENSOR_MASK) == 0;
+
+    // Detect falling edge: HIGH → LOW (no motion → motion detected)
+    if (!last_active && current_active)
     {
-        ESP_LOGI(TAG, "Intrusion detected by PIR sensor");
+        ESP_LOGI(TAG, "Intrusion detected by PIR sensor (falling edge detected)");
         ao_fsm_post(fsm, INTRUSION_DETECTED_EVENT, NULL, 0);
     }
+
+    // Save current state for next comparison
+    last_state = gpioa_state;
 }
+
 
 void security_turnLights_on(void)
 {
