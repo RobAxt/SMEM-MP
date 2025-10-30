@@ -135,4 +135,16 @@ TimerHandle_t ao_fsm_timer_start(ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, ui
  */
 void ao_fsm_timer_stop(TimerHandle_t timer);
 
+/**
+ * @brief Resets a previously started timer with a new period.
+ * @details This function resets the specified FreeRTOS timer to expire after
+ * the specified period in milliseconds. If the timer is already active, it will be stopped
+ * and restarted with the new period.
+ * @param timer A handle to the timer to reset.
+ * @param fsm A pointer to the FSM associated with the timer.
+ * @param event_type The type of event to post when the timer expires.
+ * @param period_ms The new period of the timer in milliseconds.
+ */
+void ao_fsm_timer_reset(TimerHandle_t timer, ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, uint32_t period_ms);
+
 #endif // AO_FSM_H

@@ -116,11 +116,16 @@ void ao_fsm_destroy(ao_fsm_t* fsm)
 
 static void timer_cb(TimerHandle_t xTimer)
 {
+    ESP_LOGI(TAG, "Timer callback invoked");
     ao_fsm_timer_t *ctx = (ao_fsm_timer_t*) pvTimerGetTimerID(xTimer);
     if (ctx && ctx->fsm) 
+    {
         ao_fsm_post(ctx->fsm, ctx->event_type, NULL, 0);
-    ESP_LOGD(TAG, "Timer callback posting event %d", ctx ? ctx->event_type : -1);
+        ESP_LOGD(TAG, "Timer callback posting event %d", ctx ? ctx->event_type : -1);
+    }
+    vTimerSetTimerID(xTimer, NULL);
     mpool_free(ctx);
+    xTimerStop(xTimer, 0);
 }
 
 TimerHandle_t ao_fsm_timer_start(ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, uint32_t period_ms)
@@ -136,14 +141,14 @@ TimerHandle_t ao_fsm_timer_start(ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, ui
     TimerHandle_t timer = xTimerCreate("fsm_timer", pdMS_TO_TICKS(period_ms), pdFALSE, (void*)ctx, timer_cb);
     if (!timer) 
     {
-        free(ctx);
+        mpool_free(ctx);
         return NULL;
     }
 
     if (xTimerStart(timer, 0) != pdPASS) 
     {
         xTimerDelete(timer, 0);
-        free(ctx);
+        mpool_free(ctx);
         return NULL;
     }
 
@@ -152,11 +157,42 @@ TimerHandle_t ao_fsm_timer_start(ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, ui
 
 void ao_fsm_timer_stop(TimerHandle_t timer)
 {
-    if (!timer) return;
+    if (timer != NULL) 
+    {
+        ao_fsm_timer_t *ctx = (ao_fsm_timer_t*) pvTimerGetTimerID(timer);
+        vTimerSetTimerID(timer, NULL);
+        
+        if (xTimerIsTimerActive(timer) != pdFALSE) 
+            xTimerStop(timer, portMAX_DELAY);  
+        
+        if (ctx) mpool_free(ctx);    
+    }
+}
 
-    ao_fsm_timer_t *ctx = (ao_fsm_timer_t*) pvTimerGetTimerID(timer);
-    
-    if (ctx) mpool_free(ctx);
-    xTimerStop(timer, 0);
-    xTimerDelete(timer, 0);
+void ao_fsm_timer_reset(TimerHandle_t timer, ao_fsm_t* fsm, ao_fsm_evt_type_t event_type, uint32_t period_ms)
+{
+    if (timer != NULL && fsm != NULL) 
+    {
+        ao_fsm_timer_t *ctx = (ao_fsm_timer_t*) pvTimerGetTimerID(timer);
+        if (ctx != NULL) 
+        {
+            ctx->event_type = event_type;
+        } 
+        else 
+        {
+            ctx = (ao_fsm_timer_t*)mpool_alloc(sizeof(ao_fsm_timer_t));
+            if (!ctx) return;
+            ctx->fsm = fsm;
+            ctx->event_type = event_type;
+            vTimerSetTimerID(timer, (void*)ctx);
+        }
+
+        if (xTimerIsTimerActive(timer) != pdFALSE) 
+        {
+            xTimerStop(timer, portMAX_DELAY);
+        }
+
+        xTimerChangePeriod(timer, pdMS_TO_TICKS(period_ms), portMAX_DELAY);
+        xTimerStart(timer, portMAX_DELAY);
+    }
 }

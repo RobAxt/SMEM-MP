@@ -14,7 +14,7 @@
 #include "ao_fsm.h"
 
 
-#define SEC_TAGREAD_TIMER_MS 10000
+#define SEC_TAGREAD_TIMER_MS 20000
 #define SEC_WORKING_TIMER_MS 60000
 
 static const char *TAG = "security_ao_fsm";
@@ -29,8 +29,8 @@ static TimerHandle_t workingTimerHandle = NULL;
  */
 static void security_stop_timer(TimerHandle_t timerHandle)
 {
-    ao_fsm_timer_stop(timerHandle);
-    timerHandle = NULL;
+    if(timerHandle != NULL)
+        ao_fsm_timer_stop(timerHandle);
 }
 
 /**
@@ -46,11 +46,14 @@ static void security_start_tagRead_timer(ao_fsm_t *fsm)
     {
         if(tagReadTimerHandle != NULL) 
         {
-            ESP_LOGW(TAG, "Tag read timer already running. Restarting it.");
-            security_stop_timer(tagReadTimerHandle);
+            ESP_LOGI(TAG, "Tag read timer already created. Restarting it.");
+            ao_fsm_timer_reset(tagReadTimerHandle, fsm, READ_TAG_TIMEOUT_EVENT, SEC_TAGREAD_TIMER_MS);
         }
-
-        tagReadTimerHandle = ao_fsm_timer_start(fsm, READ_TAG_TIMEOUT_EVENT, SEC_TAGREAD_TIMER_MS);
+        else
+        {
+            ESP_LOGI(TAG, "Tag read timer created.");
+            tagReadTimerHandle = ao_fsm_timer_start(fsm, READ_TAG_TIMEOUT_EVENT, SEC_TAGREAD_TIMER_MS);
+        }
     
         if(tagReadTimerHandle == NULL) 
             ESP_LOGE(TAG, "Failed to start tag read timer");
@@ -66,20 +69,25 @@ static void security_start_tagRead_timer(ao_fsm_t *fsm)
  */
 static void security_start_working_timer(ao_fsm_t *fsm)
 {
-     if(fsm != NULL) 
+    if(fsm != NULL) 
     {
         if(workingTimerHandle != NULL) 
         {
-            ESP_LOGW(TAG, "Working timer already running. Restarting it.");
-            security_stop_timer(workingTimerHandle);
+            ESP_LOGI(TAG, "Working timer already created. Restarting it.");
+            ao_fsm_timer_reset(workingTimerHandle, fsm, WORKING_TIMEOUT_EVENT, SEC_WORKING_TIMER_MS);
         }
-        
-        workingTimerHandle = ao_fsm_timer_start(fsm, WORKING_TIMEOUT_EVENT, SEC_WORKING_TIMER_MS);
+        else
+        {
+            ESP_LOGI(TAG, "Working timer created.");
+            workingTimerHandle = ao_fsm_timer_start(fsm, WORKING_TIMEOUT_EVENT, SEC_WORKING_TIMER_MS);
+        }
     
         if(workingTimerHandle == NULL) 
             ESP_LOGE(TAG, "Failed to start working timer");
     }
 }
+
+// ---------------------------------------------------------------------------------------------------------
 
 // Monitoring State Function Definition
 
@@ -208,8 +216,9 @@ ao_fsm_state_t security_validationState_invalidTagEvent_action(ao_fsm_t *fsm, co
     }
     ESP_LOGW(TAG, "Invalid tag read. Transitioning to ALARM_STATE.");
 
-    // Stop tag read timer
+    // Stop all timers
     security_stop_timer(tagReadTimerHandle);
+    security_stop_timer(workingTimerHandle);
 
     //TODO: Activate siren and lights.
 
@@ -360,7 +369,7 @@ ao_fsm_state_t security_normalState_workingTimeoutEvent_action(ao_fsm_t *fsm, co
     if(security_onEvent_callbacks[WORKING_TIMEOUT_EVENT] != NULL)
         security_onEvent_callbacks[WORKING_TIMEOUT_EVENT]();
     
-    return SEC_NORMAL_STATE;
+    return SEC_MONITORING_STATE;
 }
 
 ao_fsm_state_t security_normalState_panicButtonPressed_action(ao_fsm_t *fsm, const ao_evt_t *event)
@@ -372,11 +381,16 @@ ao_fsm_state_t security_normalState_panicButtonPressed_action(ao_fsm_t *fsm, con
     }
     ESP_LOGI(TAG, "Panic button pressed! Transitioning to VALIDATION_STATE.");
 
+    // Stop working timer
+    security_stop_timer(workingTimerHandle);
+    // Start tag read timer
+    security_start_tagRead_timer(fsm);
+
     // Notify panic button pressed event
     if(security_onEvent_callbacks[PANIC_BUTTON_PRESSED_EVENT] != NULL)
         security_onEvent_callbacks[PANIC_BUTTON_PRESSED_EVENT]();
     
-    return SEC_NORMAL_STATE;
+    return SEC_VALIDATION_STATE;
 }
 
 ao_fsm_state_t security_normalState_turnLightsOn_action(ao_fsm_t *fsm, const ao_evt_t *event)

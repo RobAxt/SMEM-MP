@@ -93,23 +93,20 @@ void security_tagReader(ao_fsm_t* fsm)
         return;
     }
 
-    if(tag_len == 0) 
+    if(tag_len != 0 && tag_len == TAG_SIZE) 
     {
-        ESP_LOGI(TAG, "No tag detected");
-        return;
-    }
+       bool is_valid = security_tagValidation(tag, TAG_SIZE);
 
-    bool is_valid = security_tagValidation(tag, TAG_SIZE);
-
-    if(is_valid) 
-    {
-        ESP_LOGI(TAG, "Valid tag read: %02X %02X %02X %02X", tag[0], tag[1], tag[2], tag[3]);
-        ao_fsm_post(fsm, VALID_TAG_EVENT, NULL, 0);
-    } 
-    else 
-    {
-        ESP_LOGW(TAG, "Invalid tag read: %02X %02X %02X %02X", tag[0], tag[1], tag[2], tag[3]);
-        ao_fsm_post(fsm, INVALID_TAG_EVENT, NULL, 0);
+       if(is_valid) 
+       {
+           ESP_LOGI(TAG, "Valid tag read: %02X %02X %02X %02X", tag[0], tag[1], tag[2], tag[3]);
+           ao_fsm_post(fsm, VALID_TAG_EVENT, NULL, 0);
+       } 
+       else 
+       {
+           ESP_LOGW(TAG, "Invalid tag read: %02X %02X %02X %02X", tag[0], tag[1], tag[2], tag[3]);
+           ao_fsm_post(fsm, INVALID_TAG_EVENT, NULL, 0);
+       }
     }
 }
 
@@ -146,7 +143,7 @@ void security_pirSensorReader(ao_fsm_t* fsm)
     // Check if PIR sensor is Active (assuming active low)
     if((gpioa_state & PIR_SENSOR_MASK) == 0) 
     {
-        ESP_LOGI(TAG, "Panic button pressed");
+        ESP_LOGI(TAG, "Intrusion detected by PIR sensor");
         ao_fsm_post(fsm, INTRUSION_DETECTED_EVENT, NULL, 0);
     }
 }

@@ -181,7 +181,7 @@ esp_err_t i2c_pn532_read_passive_target(uint8_t *uid, size_t *uid_len)
     // Interpretación mínima del código “no tag”
     if (resp_len > 1 && resp[1] == PN532_NO_TAG_FOUND) 
     {
-        ESP_LOGI(TAG, "No passive target found");
+        ESP_LOGD(TAG, "No passive target found");
         if (uid_len) *uid_len = 0;
         return ESP_OK;
     }
