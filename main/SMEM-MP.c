@@ -1,39 +1,47 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
+#include "esp_system.h"
+#include "esp_heap_caps.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
-#include "net_driver.h"
-#include "sntp_driver.h"
-#include "mqtt_driver.h"
-#include "time_publisher.h"
+#include "communication_module.h"
 
 static const char *TAG = "app_main";
 
 void app_main(void)
 {
+    esp_log_level_set("*", ESP_LOG_INFO);
+
     ESP_LOGI(TAG, "Initializing SMEM-MP application");
     
+    // Application code begins here
+
     esp_ip4_addr_t ip     = { .addr = ESP_IP4TOADDR(192, 168, 160, 2) };
     esp_ip4_addr_t gw     = { .addr = ESP_IP4TOADDR(192, 168, 160, 1) };
     esp_ip4_addr_t mask   = { .addr = ESP_IP4TOADDR(255, 255, 255, 0) };
-    esp_ip4_addr_t ntp  = { .addr = ESP_IP4TOADDR(192, 168, 160, 1) };
+    esp_ip4_addr_t ntp    = { .addr = ESP_IP4TOADDR(192, 168, 160, 1) };
     esp_ip4_addr_t broker = { .addr = ESP_IP4TOADDR(192, 168, 160, 1) };
 
     ESP_ERROR_CHECK(nvs_flash_init());
 
-    ESP_ERROR_CHECK(eth_net_start(ip, gw, mask));
+    ESP_ERROR_CHECK(communication_module_start(ip, gw, mask, ntp, broker));
 
-    ESP_ERROR_CHECK(eth_net_ready());
-    
-    ESP_ERROR_CHECK(sntp_client_start(ntp));
+    // Application code ends here
 
-    ESP_ERROR_CHECK(mqtt_client_start(broker));
+    while (1)
+    {
+        ESP_LOGD(TAG, "SMEM-MP is running...");
 
-    ESP_ERROR_CHECK(time_publisher_start());
-    ESP_LOGI(TAG, "Size of signed int: %d",sizeof(signed int));
-    ESP_LOGI(TAG, "Size of unsigned int8_t: %d",sizeof(uint8_t));
-    ESP_LOGI(TAG, "Size of unsigned int: %d",sizeof(unsigned int));
-    ESP_LOGI(TAG, "Size of signed long: %d",sizeof(signed long));
-    ESP_LOGI(TAG, "Size of unsigned long: %d",sizeof(unsigned long));
-    ESP_LOGI(TAG, "Ending app_main function");
+        // Application code begins here
+        
+        ESP_LOGI("HEAP", "Free heap: %u bytes", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+        ESP_LOGI("HEAP", "Largest free block: %u bytes", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
+        ESP_LOGI("HEAP", "Minimum ever free: %u bytes", heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
+        
+        // Application code ends here
+        
+        vTaskDelay(pdMS_TO_TICKS(60000));
+    }
 }

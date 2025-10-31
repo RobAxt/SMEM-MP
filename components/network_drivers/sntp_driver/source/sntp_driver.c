@@ -86,7 +86,7 @@ esp_err_t sntp_client_isotime(char *datetime_string, size_t size)
         return ESP_FAIL;
     }
 
-    size_t len = strftime(datetime_string, size, "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
+    size_t len = strftime(datetime_string, size, "%Y-%m-%dT%H:%M:%S-03:00", &timeinfo);
     if (len == 0) {
         ESP_LOGE("sntp_client", "Failed to format time string");
         return ESP_FAIL;

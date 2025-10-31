@@ -18,7 +18,7 @@
 #include "esp_netif.h"
 
 #define TIMESTAMP_STRING_SIZE 64  // Example  Sat Jul  5 20:06:30 2025
-#define ISO_TIMESTAMP_SIZE    25  // "YYYY-MM-DDTHH:MM:SSZ" + null terminator
+#define ISO_TIMESTAMP_SIZE    26  // "YYYY-MM-DDTHH:MM:SS-03:00" + null terminator
 
 /**
  * @brief Start the SNTP client.
