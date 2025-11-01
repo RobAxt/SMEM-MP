@@ -6,11 +6,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "security_module.h"
 #include "communication_module.h"
 
 static const char *TAG = "app_main";
 
-void app_main(void)
+void app_main(void) 
 {
     esp_log_level_set("*", ESP_LOG_INFO);
 
@@ -25,6 +26,8 @@ void app_main(void)
     esp_ip4_addr_t broker = { .addr = ESP_IP4TOADDR(192, 168, 160, 1) };
 
     ESP_ERROR_CHECK(nvs_flash_init());
+
+    ESP_ERROR_CHECK(security_module_start());
 
     ESP_ERROR_CHECK(communication_module_start(ip, gw, mask, ntp, broker));
 
