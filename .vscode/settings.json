@@ -12,7 +12,36 @@
   },
   "idf.flashType": "UART",
   "files.associations": {
-    "freertos.h": "c"
+    "freertos.h": "c",
+    "esp_log.h": "c",
+    "spi_master.h": "c",
+    "gpio.h": "c",
+    "semphr.h": "c",
+    "string.h": "c",
+    "esp_eth_driver.h": "c",
+    "eth_driver.h": "c",
+    "esp_eth_mac_spi.h": "c",
+    "sdkconfig.h": "c",
+    "cstdint": "c",
+    "internet": "cpp",
+    "netfwd": "cpp",
+    "esp_netif_ip_addr.h": "c",
+    "esp_system.h": "c",
+    "esp_event.h": "c",
+    "esp_err.h": "c",
+    "esp_mac.h": "c",
+    "esp_check.h": "c",
+    "mqtt_client.h": "c",
+    "esp_transport.h": "c",
+    "task.h": "c",
+    "mqtt_driver.h": "c",
+    "type_traits": "c",
+    "esp_netif.h": "c",
+    "stdint.h": "c",
+    "esp_netif_types.h": "c",
+    "time_publisher.h": "c",
+    "sntp_driver.h": "c"
   },
-  "idf.monitorPort": "/dev/ttyUSB0"
+  "idf.monitorPort": "/dev/ttyUSB0",
+  "git.ignoreLimitWarning": true
 }
