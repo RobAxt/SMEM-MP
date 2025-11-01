@@ -4,20 +4,7 @@
 #include "communication_suscriber.h"
 #include "mqtt_driver.h"
 
-#define MQTT_SUB_TOPIC_SIZE 16 
-#define MQTT_FULL_TOPIC_SIZE (MQTT_BASE_TOPIC_SIZE + MQTT_SUB_TOPIC_SIZE)
-
 static const char *TAG = "communication_suscriber";
-
-static esp_err_t mqtt_generic_suscription(char* subTopic, mqtt_msg_handler_t callback)
-{
-    char full_topic[MQTT_FULL_TOPIC_SIZE]; 
-    snprintf(full_topic, MQTT_FULL_TOPIC_SIZE, "%s%s", MQTT_BASE_TOPIC, subTopic);
-
-    esp_err_t ret = mqtt_client_subscribe(full_topic, callback, 0);
-
-    return ret;
-}
 
 //------------------------------------------------------------------------------
 // MQTT TIME SUBSCRIPTION
@@ -34,6 +21,16 @@ static void mqtt_time_callback(const char *topic, const char *payload)
 }
 
 //------------------------------------------------------------------------------
+
+static esp_err_t mqtt_generic_suscription(char* subTopic, mqtt_msg_handler_t callback)
+{
+    char full_topic[MQTT_FULL_TOPIC_SIZE]; 
+    snprintf(full_topic, MQTT_FULL_TOPIC_SIZE, "%s%s", MQTT_BASE_TOPIC, subTopic);
+
+    esp_err_t ret = mqtt_client_subscribe(full_topic, callback, QOS0);
+
+    return ret;
+}
 
 esp_err_t communication_suscriber_start(void)
 {   

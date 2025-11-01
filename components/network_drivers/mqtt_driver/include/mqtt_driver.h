@@ -24,6 +24,10 @@
 // Define the maximum size of the payload and topic strings
 #define MAX_PAYLOAD_SIZE 256
 #define MAX_TOPIC_SIZE 64
+// Define Quality of Service levels
+#define QOS0 0
+#define QOS1 1
+#define QOS2 2
 
 // Forward declaration of the MQTT message handler type
 // This type of function will be called when a message is received on a subscribed topic 

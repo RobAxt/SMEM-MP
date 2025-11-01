@@ -12,25 +12,25 @@
 #include "sntp_driver.h"
 
 #define PERIOD_MS 30000
-#define PAYLOAD_SIZE 64
-#define TOPIC "TGN/Ferreyra/Comunicaciones/EMyR/N2440/TIME"
 
 static const char *TAG = "communication_publisher";
 static TaskHandle_t s_time_pub_handle = NULL;
 
 static void time_publisher_task(void *arg)
 {
-    char json_buf[PAYLOAD_SIZE];
+    char payload_buffer[MQTT_PAYLOAD_SIZE];
     char time_str[ISO_TIMESTAMP_SIZE];
+    char full_topic[MQTT_FULL_TOPIC_SIZE];
+
+    snprintf(full_topic, MQTT_FULL_TOPIC_SIZE, "%s%s", MQTT_BASE_TOPIC, "TIME");
 
     while (1)
     {
         if (sntp_client_isotime(time_str, sizeof(time_str)) == ESP_OK)
         {
-            snprintf(json_buf, sizeof(json_buf), "{\"timestamp\":\"%s\"}", time_str);
-            ESP_LOGI(TAG, "Publish: %s", json_buf);
-            mqtt_client_publish(TOPIC, json_buf, 0);
-            
+            snprintf(payload_buffer, sizeof(payload_buffer), "{\"timestamp\":\"%s\"}", time_str);
+            ESP_LOGI(TAG, "Publish: %s", payload_buffer);
+            mqtt_client_publish(full_topic, payload_buffer, 0);
         }
         else
         {
