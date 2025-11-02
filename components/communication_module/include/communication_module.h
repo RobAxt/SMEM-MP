@@ -18,10 +18,10 @@
 #include "esp_err.h"
 #include "esp_netif_types.h"
 
-#define MQTT_BASE_TOPIC_SIZE 42
+#define MQTT_BASE_TOPIC_SIZE 48
 #define MQTT_SUB_TOPIC_SIZE  16 
 #define MQTT_FULL_TOPIC_SIZE (MQTT_BASE_TOPIC_SIZE + MQTT_SUB_TOPIC_SIZE)
-#define MQTT_PAYLOAD_SIZE    64
+#define MQTT_PAYLOAD_SIZE    128
 
 /**
  * @brief Base MQTT topic for the communication module.

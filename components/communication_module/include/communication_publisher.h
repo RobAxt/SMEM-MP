@@ -23,4 +23,20 @@
  */
 esp_err_t communication_publisher_start(void);
 
+/**
+ * @brief Publish the current siren status.
+ * @details This function publishes the siren status to the appropriate MQTT topic.
+ * @param status A string representing the siren status.
+ * @return esp_err_t Returns ESP_OK on success, or an error code on failure.
+ */
+esp_err_t communication_siren_status_publish(const char* status);
+
+/**
+ * @brief Publish the current lights status.
+ * @details This function publishes the lights status to the appropriate MQTT topic.
+ * @param status A string representing the lights status.
+ * @return esp_err_t Returns ESP_OK on success, or an error code on failure.
+ */
+esp_err_t communication_lights_status_publish(const char* status);
+
 #endif // COMMUNICATION_PUBLISHER_H
