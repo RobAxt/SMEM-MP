@@ -23,7 +23,7 @@
 #define MAX_SUBSCRIBE_MSG 10
 // Define the maximum size of the payload and topic strings
 #define MAX_PAYLOAD_SIZE 256
-#define MAX_TOPIC_SIZE 64
+#define MAX_TOPIC_SIZE 128
 // Define Quality of Service levels
 #define QOS0 0
 #define QOS1 1

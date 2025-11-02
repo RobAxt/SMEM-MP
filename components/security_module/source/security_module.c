@@ -78,7 +78,7 @@ esp_err_t security_fsm_start(void)
 
     security_fsm = ao_fsm_create(TAG, SEC_MONITORING_STATE, security_fsm_transitions, sizeof(security_fsm_transitions)/sizeof(ao_fsm_transition_t));
     
-    return ao_fsm_start(security_fsm, tskIDLE_PRIORITY + 1, 2048);
+    return ao_fsm_start(security_fsm, tskIDLE_PRIORITY + 1, 4096);
 }
 
 esp_err_t security_watchers_start(ao_fsm_t* security_fsm)

@@ -15,6 +15,7 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_LIST_DIR}/components/i2c_drivers/i2c_pn532
     ${CMAKE_CURRENT_LIST_DIR}/components/ao_core
     ${CMAKE_CURRENT_LIST_DIR}/components/security_module
+    ${CMAKE_CURRENT_LIST_DIR}/components/ambiental_module
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(SMEM-MP)

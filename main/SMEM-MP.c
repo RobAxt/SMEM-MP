@@ -7,7 +7,10 @@
 #include "freertos/task.h"
 
 #include "security_module.h"
+#include "ambiental_module.h"
 #include "communication_module.h"
+
+#define LOOP_DELAY_MS 60000
 
 static const char *TAG = "app_main";
 
@@ -29,10 +32,12 @@ void app_main(void)
 
     ESP_ERROR_CHECK(security_module_start());
 
+    ESP_ERROR_CHECK(ambiental_module_start());
+
     ESP_ERROR_CHECK(communication_module_start(ip, gw, mask, ntp, broker));
 
     // Application code ends here
-
+ 
     while (1)
     {
         ESP_LOGD(TAG, "SMEM-MP is running...");
@@ -45,6 +50,6 @@ void app_main(void)
         
         // Application code ends here
         
-        vTaskDelay(pdMS_TO_TICKS(60000));
+        vTaskDelay(pdMS_TO_TICKS(LOOP_DELAY_MS));
     }
 }
