@@ -27,6 +27,6 @@ dependencies:
 direct_dependencies:
 - espressif/ds18b20
 - idf
-manifest_hash: 07a993e7d3ec5082f62f36760ad2b32e2507939128180aca096a5e4eb9be0386
+manifest_hash: 50484dd4509bda7237f9a35b9078aec8f61fec3467e2c3ee67c408d64e9d13b4
 target: esp32c6
 version: 2.0.0
