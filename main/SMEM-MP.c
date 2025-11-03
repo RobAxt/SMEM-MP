@@ -6,7 +6,7 @@
 
 #include "uart_pzem004t.h"
 
-#define LOOP_DELAY_MS 60000
+#define LOOP_DELAY_MS 5000
 
 static const char *TAG = "SMEM-MP";
 
@@ -32,9 +32,9 @@ void app_main(void)
             ESP_LOGE(TAG, "Failed to read from PZEM004T: %s", esp_err_to_name(err));
         }
 
-        ESP_LOGI("HEAP", "Free heap: %u bytes", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
-        ESP_LOGI("HEAP", "Largest free block: %u bytes", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
-        ESP_LOGI("HEAP", "Minimum ever free: %u bytes", heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
+    //    ESP_LOGI("HEAP", "Free heap: %u bytes", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+    //    ESP_LOGI("HEAP", "Largest free block: %u bytes", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
+    //    ESP_LOGI("HEAP", "Minimum ever free: %u bytes", heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
         
         // Application code ends here
         
