@@ -124,10 +124,23 @@ esp_err_t uart_pzem004t_read(void)
     // Reply buffer: addr(1)+func(1)+bytecnt(1)+data(20)+crc(2) = 25 bytes
     uint8_t rx[32] = {0};
     esp_err_t err = mbc_master_send_request(mbc_master_handle, &req, rx);
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "send_request failed: %s (0x%x)", esp_err_to_name(err), err);
         return err;
     }
     pzem_parse_and_log(rx, sizeof(rx));
     return ESP_OK;
+}
+
+esp_err_t uart_pzem_reset(void)
+{
+    mb_param_request_t req = {
+        .slave_addr = PZEM_SLAVE_ADDR,
+        .command    = 0x42,
+        .reg_start  = 0,
+        .reg_size   = 0
+    };
+    uint8_t rx[8] = {0};
+    return mbc_master_send_request(mbc_master_handle, &req, rx);
 }
