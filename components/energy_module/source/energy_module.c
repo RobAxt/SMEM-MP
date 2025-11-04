@@ -31,6 +31,10 @@ static void energyRead_task(void *arg)
             callback_data.ac_power = uart_pzem_power_W();
             callback_data.ac_frequency = uart_pzem_freq_Hz();
             callback_data.ac_power_factor = uart_pzem_pf();
+
+            ESP_LOGI(TAG, "AC Voltage=%.1f V, AC Current=%.3f A, AC Power=%.1f W, AC freq=%.1f Hz, AC PF=%.2f",
+             callback_data.ac_voltage, callback_data.ac_current, callback_data.ac_power, 
+             callback_data.ac_frequency, callback_data.ac_power_factor);
         }
 
         int16_t temp_value = 0;
@@ -39,7 +43,7 @@ static void energyRead_task(void *arg)
 
         if(err != ESP_OK) 
         {
-            ESP_LOGE(TAG, "Failed to read from ADS1115: %s", esp_err_to_name(err));
+            ESP_LOGE(TAG, "Failed to read from ADS1115= %s", esp_err_to_name(err));
         }
         else
         {
@@ -63,7 +67,7 @@ static void energyRead_task(void *arg)
         }
 
         if(hookCallback != NULL)
-            hookCallback((void*)&callback_data, (ssize_t)sizeof(callback_data));
+            hookCallback(&callback_data);
         
         vTaskDelay(pdMS_TO_TICKS(ENERGY_READ_INTERVAL_MS));
     }

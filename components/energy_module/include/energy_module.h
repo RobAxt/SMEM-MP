@@ -18,14 +18,6 @@
  */
 
 /**
- * @brief Callback function type for energy data read events.
- * @brief This callback is invoked when energy data is read.
- * @param data Pointer to the data read.
- * @param size Size of the data read.
- */
- typedef void (*hookCallback_onEnergyRead)(void *data, ssize_t size);
-
-/**
  * @brief Data structure for energy callback data
  * @details This structure holds energy-related parameters such as AC/DC voltage, 
  *          current, power, frequency, and power factor.  
@@ -40,6 +32,14 @@
     float dc_current;      /**< DC Current in Amperes */
     float dc_power;        /**< DC Power in Watts */
 } energy_data_t;
+
+/**
+ * @brief Callback function type for energy data read events.
+ * @brief This callback is invoked when energy data is read.
+ * @param data Pointer to the data read.
+ * @param size Size of the data read.
+ */
+ typedef void (*hookCallback_onEnergyRead)(energy_data_t *data);
 
 /**
  * @brief Set the callback function for energy read events.

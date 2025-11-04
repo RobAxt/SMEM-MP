@@ -40,7 +40,7 @@ static void pzem_parse_and_log(const uint8_t *rx, size_t len)
     freq_Hz = (float)u16_from_regs(rx[14], rx[15]) * 0.1f;
     pf = (float)u16_from_regs(rx[16], rx[17]) * 0.01f;
 
-    ESP_LOGI(TAG, "V=%.1f V, I=%.3f A, P=%.1f W, E=%.0f Wh, f=%.1f Hz, PF=%.2f",
+    ESP_LOGD(TAG, "V=%.1f V, I=%.3f A, P=%.1f W, E=%.0f Wh, f=%.1f Hz, PF=%.2f",
              voltage_V, current_A, power_W, energy_Wh, freq_Hz, pf);
 }
 

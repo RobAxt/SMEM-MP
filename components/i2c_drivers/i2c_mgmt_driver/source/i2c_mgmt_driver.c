@@ -71,7 +71,7 @@ esp_err_t i2c_mgmt_begin_transaction(void)
         return ESP_ERR_TIMEOUT;
 
     owner = xTaskGetCurrentTaskHandle();
-    ESP_LOGI(TAG, "I2C bus locked by task: %s", pcTaskGetName(owner));
+    ESP_LOGD(TAG, "I2C bus locked by task: %s", pcTaskGetName(owner));
 
     return ESP_OK;
 }
@@ -185,7 +185,7 @@ esp_err_t i2c_mgmt_end_transaction(void)
     
     owner = NULL;
     xSemaphoreGive(mutex);
-    ESP_LOGI(TAG, "I2C bus released by task: %s", pcTaskGetName(owner));
+    ESP_LOGD(TAG, "I2C bus released by task: %s", pcTaskGetName(owner));
     
     return ESP_OK;
 }
