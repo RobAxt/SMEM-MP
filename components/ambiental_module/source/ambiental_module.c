@@ -134,7 +134,7 @@ esp_err_t ambiental_module_start(void)
         return ESP_ERR_NOT_FOUND;
     }
 
-    BaseType_t ok = xTaskCreate(temperatureRead_task, TAG, 2048, NULL, tskIDLE_PRIORITY + 1, NULL);
+    BaseType_t ok = xTaskCreate(temperatureRead_task, TAG, 6144, NULL, tskIDLE_PRIORITY + 1, NULL);
 
     if(ok != pdPASS)
     {

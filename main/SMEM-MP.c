@@ -6,9 +6,11 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "energy_module.h"
 #include "security_module.h"
 #include "ambiental_module.h"
 #include "communication_module.h"
+
 
 #define LOOP_DELAY_MS 60000
 
@@ -34,6 +36,8 @@ void app_main(void)
 
     ESP_ERROR_CHECK(ambiental_module_start());
 
+    ESP_ERROR_CHECK(energy_module_start());
+
     ESP_ERROR_CHECK(communication_module_start(ip, gw, mask, ntp, broker));
 
     // Application code ends here
@@ -44,9 +48,9 @@ void app_main(void)
 
         // Application code begins here
         
-        ESP_LOGI("HEAP", "Free heap: %u bytes", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
-        ESP_LOGI("HEAP", "Largest free block: %u bytes", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
-        ESP_LOGI("HEAP", "Minimum ever free: %u bytes", heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
+        ESP_LOGD("HEAP", "Free heap: %u bytes", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+        ESP_LOGD("HEAP", "Largest free block: %u bytes", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
+        ESP_LOGD("HEAP", "Minimum ever free: %u bytes", heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
         
         // Application code ends here
         
