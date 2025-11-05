@@ -241,7 +241,7 @@ esp_err_t communication_publisher_start(void)
 
     energy_set_hookCallback_onEnergyRead(publish_energy_read_event);
 
-    ESP_LOGI(TAG, "Time publisher started");
+    ESP_LOGI(TAG, "Communication publisher started");
     return ESP_OK;
 }
 
