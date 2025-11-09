@@ -12,7 +12,10 @@
   },
   "idf.flashType": "UART",
   "files.associations": {
-    "freertos.h": "c"
+    "freertos.h": "c",
+    "esp_zigbee_zcl_common.h": "c",
+    "esp_zigbee_zcl_command.h": "c",
+    "esp_err.h": "c"
   },
   "idf.monitorPort": "/dev/ttyUSB0"
 }
