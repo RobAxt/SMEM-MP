@@ -69,19 +69,6 @@ static void energyRead_task(void *arg)
             ESP_LOGI(TAG, "DC Current= %.1f A, DC Power= %.1f ",callback_data.dc_current, callback_data.dc_power );
         }
 
-        
-        
-
-        if(err != ESP_OK) 
-        {
-            ESP_LOGE(TAG, "Failed to read from Zigbee Gateway= %s", esp_err_to_name(err));
-        }
-        else
-        {
-            
-            ESP_LOGI(TAG, "ZIGBEE Device State= 0x%02X", callback_data.zigbee_device_state);
-        }
-
         if(hookEnergyReadCallback != NULL)
             hookEnergyReadCallback(&callback_data);
         
