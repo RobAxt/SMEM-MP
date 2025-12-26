@@ -8,6 +8,7 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_LIST_DIR}/components/network_drivers/mqtt_driver
     ${CMAKE_CURRENT_LIST_DIR}/components/network_drivers/net_driver
     ${CMAKE_CURRENT_LIST_DIR}/components/network_drivers/sntp_driver
+    ${CMAKE_CURRENT_LIST_DIR}/components/network_drivers/zigbee_gateway
     ${CMAKE_CURRENT_LIST_DIR}/components/uart_drivers/uart_pzem004t
     ${CMAKE_CURRENT_LIST_DIR}/components/i2c_drivers/i2c_mgmt_driver 
     ${CMAKE_CURRENT_LIST_DIR}/components/i2c_drivers/i2c_ads1115 
@@ -18,6 +19,6 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_LIST_DIR}/components/security_module
     ${CMAKE_CURRENT_LIST_DIR}/components/ambiental_module
     ${CMAKE_CURRENT_LIST_DIR}/components/energy_module
-    )
+)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(SMEM-MP)

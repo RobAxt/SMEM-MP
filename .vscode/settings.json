@@ -5,7 +5,7 @@
   "idf.openOcdConfigs": [
     "board/esp32c6-ftdi.cfg"
   ],
-  "idf.port": "/dev/ttyUSB0",
+  "idf.port": "/dev/ttyUSB1",
   "idf.toolsPath": "/home/raxt/.espressif",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32c6"
@@ -51,8 +51,10 @@
     "security_ao_fsm.h": "c",
     "ao_fsm_watcher.h": "c",
     "chrono": "c",
-    "communication_module.h": "c"
+    "communication_module.h": "c",
+    "esp_zigbee_zcl_common.h": "c",
+    "esp_zigbee_zcl_command.h": "c",
+    "esp_err.h": "c"
   },
-  "idf.monitorPort": "/dev/ttyUSB0",
-  "git.ignoreLimitWarning": true
+  "idf.monitorPort": "/dev/ttyUSB1"
 }
