@@ -224,6 +224,22 @@ static void publish_energy_read_event(energy_data_t *data)
    }
 }
 
+static void publish_energy_state_event(energy_data_t *data)
+{
+    if( data !=  NULL )
+    {
+        char timeString[ISO_TIMESTAMP_SIZE] = {0};
+
+        if( sntp_client_isotime(timeString, sizeof(timeString)) == ESP_OK )
+        {
+            ESP_LOGI(TAG, "ZIGBEE Device State changed= 0x%02X", data->zigbee_device_state);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "Failed to get ISO timestamp for Temperature Read Event");
+        }
+   }
+}
 //-------------------------------------------------------------------
 
 esp_err_t communication_publisher_start(void)
@@ -240,6 +256,7 @@ esp_err_t communication_publisher_start(void)
     ambiental_set_hookCallback_onTemperatureRead(publish_temperature_read_event);
 
     energy_set_hookCallback_onEnergyRead(publish_energy_read_event);
+    energy_set_hookCallback_onEnergyState(publish_energy_state_event);
 
     ESP_LOGI(TAG, "Communication publisher started");
     return ESP_OK;

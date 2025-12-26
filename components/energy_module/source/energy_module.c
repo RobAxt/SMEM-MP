@@ -6,10 +6,13 @@
 #include "uart_pzem004t.h"
 #include "i2c_mgmt_driver.h"
 #include "i2c_ads1115.h"
+#include "zigbee_gateway.h"
 
 #define ENERGY_READ_INTERVAL_MS 60000
+#define ENERGY_STATE_INTERVAL_MS 2000
 
-static hookCallback_onEnergyRead hookCallback = NULL;
+static hookCallback_onEnergyEvent hookEnergyReadCallback = NULL;
+static hookCallback_onEnergyEvent hookEnergyStateCallback = NULL;
 static energy_data_t callback_data = {0};
 
 static const char *TAG = "energy_module";
@@ -66,16 +69,56 @@ static void energyRead_task(void *arg)
             ESP_LOGI(TAG, "DC Current= %.1f A, DC Power= %.1f ",callback_data.dc_current, callback_data.dc_power );
         }
 
-        if(hookCallback != NULL)
-            hookCallback(&callback_data);
+        
+        
+
+        if(err != ESP_OK) 
+        {
+            ESP_LOGE(TAG, "Failed to read from Zigbee Gateway= %s", esp_err_to_name(err));
+        }
+        else
+        {
+            
+            ESP_LOGI(TAG, "ZIGBEE Device State= 0x%02X", callback_data.zigbee_device_state);
+        }
+
+        if(hookEnergyReadCallback != NULL)
+            hookEnergyReadCallback(&callback_data);
         
         vTaskDelay(pdMS_TO_TICKS(ENERGY_READ_INTERVAL_MS));
     }
 }
 
-void energy_set_hookCallback_onEnergyRead(hookCallback_onEnergyRead callback) 
+static void energyState_task(void *arg) 
 {
-    hookCallback = callback;
+    uint8_t zb_state = 0;
+    uint8_t last_state = 0xFF;
+
+    while (1) 
+    {
+        esp_err_t err = zigbee_gateway_data_receive(&zb_state, sizeof(zb_state));
+
+        if(hookEnergyStateCallback != NULL && err == ESP_OK) 
+        {
+            if( zb_state != last_state)
+            {
+                callback_data.zigbee_device_state = zb_state;
+                hookEnergyStateCallback(&callback_data);
+                last_state = zb_state;
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(ENERGY_STATE_INTERVAL_MS));
+    }
+}
+
+void energy_set_hookCallback_onEnergyRead(hookCallback_onEnergyEvent callback) 
+{
+    hookEnergyReadCallback = callback;
+}
+
+void energy_set_hookCallback_onEnergyState(hookCallback_onEnergyEvent callback) 
+{
+    hookEnergyStateCallback = callback;
 }
 
 esp_err_t energy_module_start(void) 
@@ -102,7 +145,13 @@ esp_err_t energy_module_start(void)
         }
     }
 
-    if( err_i2c == ESP_OK && err_pzem == ESP_OK )
+    esp_err_t err_zb = zigbee_gateway_start();
+    if(err_zb != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to start Zigbee Gateway: %s", esp_err_to_name(err_zb));
+    }
+
+    if( err_i2c == ESP_OK && err_pzem == ESP_OK && err_zb == ESP_OK )
     {
         BaseType_t ok = xTaskCreate(energyRead_task, TAG, 6144, NULL, tskIDLE_PRIORITY + 1, NULL);
 
@@ -112,6 +161,13 @@ esp_err_t energy_module_start(void)
             return ESP_FAIL;
         }
 
+        ok = xTaskCreate(energyState_task, TAG, 4096, NULL, tskIDLE_PRIORITY + 1, NULL);
+
+        if(ok != pdPASS)
+        {
+            ESP_LOGE(TAG, "Failed to create Energy State task");
+            return ESP_FAIL;
+        }
         return ESP_OK;
     }
     ESP_LOGE(TAG, "Failed to create start Energy module");

@@ -31,6 +31,7 @@
     float dc_voltage;      /**< DC Voltage in Volts */
     float dc_current;      /**< DC Current in Amperes */
     float dc_power;        /**< DC Power in Watts */
+    uint8_t zigbee_device_state; /**< State of the Zigbee device */
 } energy_data_t;
 
 /**
@@ -39,7 +40,7 @@
  * @param data Pointer to the data read.
  * @param size Size of the data read.
  */
- typedef void (*hookCallback_onEnergyRead)(energy_data_t *data);
+ typedef void (*hookCallback_onEnergyEvent)(energy_data_t *data);
 
 /**
  * @brief Set the callback function for energy read events.
@@ -47,7 +48,15 @@
  *          that will be invoked when energy data is read.
  * @param callback The callback function to be set.
  */
-void energy_set_hookCallback_onEnergyRead(hookCallback_onEnergyRead callback); 
+void energy_set_hookCallback_onEnergyRead(hookCallback_onEnergyEvent callback); 
+
+/**
+ * @brief Set the callback function for energy state events.
+ * @details This function allows the user to set a custom callback function
+ *          that will be invoked when the energy state changes.
+ * @param callback The callback function to be set.
+ */
+void energy_set_hookCallback_onEnergyState(hookCallback_onEnergyEvent callback); 
 
 /**
  * @brief Start the energy module.
