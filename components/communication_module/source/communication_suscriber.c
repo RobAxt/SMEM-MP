@@ -11,8 +11,8 @@
 
 static const char *TAG = "communication_suscriber";
 
-static const char *SIREN_CMND_SUBTOPIC  = "ALARM/Siren/CMND";
-static const char *LIGHTS_CMND_SUBTOPIC = "ALARM/Lights/CMND";
+static const char *SIREN_CMND_SUBTOPIC  = "SECURITY/CMND/Siren";
+static const char *LIGHTS_CMND_SUBTOPIC = "SECURITY/CMND/Lights";
 
 //------------------------------------------------------------------------------
 // MQTT TIME SUBSCRIPTION

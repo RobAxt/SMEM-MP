@@ -39,6 +39,12 @@ static const char *CURRENT_DC_TOPIC = "ENERGY/DC/Current";
 static const char *POWER_DC_TOPIC = "ENERGY/DC/Power";
 static const char *VALUE_PAYLOAD = "{\"TimeStamp\":\"%s\",\"Value\":%.2f,\"Unit\":\"%s\"}";
 
+static const char *ENERGY_PROVIDER_STATUS_TOPIC = "ENERGY/STATUS/Provider";
+static const char *ENERGY_PROTECTION_STATUS_TOPIC = "ENERGY/STATUS/Protection";
+static const char *ENERGY_TAMPERING_STATUS_TOPIC = "ENERGY/STATUS/Tampering";
+static const char *ENERGY_STATUS_NORMAL = "NORMAL";
+static const char *ENERGY_STATUS_FAULT = "FAULT";
+static const char *ENERGY_STATUS_TAMPERED = "TAMPERED";
 
 static const uint64_t EXTERNAL = 0xA079510087D31C28;
 static const uint64_t INTERNAL = 0x9624300087EFEF28;
@@ -233,6 +239,9 @@ static void publish_energy_state_event(energy_data_t *data)
         if( sntp_client_isotime(timeString, sizeof(timeString)) == ESP_OK )
         {
             ESP_LOGI(TAG, "ZIGBEE Device State changed= 0x%02X", data->zigbee_device_state);
+            publish_generic_event(ENERGY_PROVIDER_STATUS_TOPIC,   STATUS_JSON_PAYLOAD, data->zigbee_device_state & 0x01? ENERGY_STATUS_NORMAL : ENERGY_STATUS_FAULT, NULL);
+            publish_generic_event(ENERGY_PROTECTION_STATUS_TOPIC, STATUS_JSON_PAYLOAD, data->zigbee_device_state & 0x02? ENERGY_STATUS_NORMAL : ENERGY_STATUS_FAULT, NULL);
+            publish_generic_event(ENERGY_TAMPERING_STATUS_TOPIC,  STATUS_JSON_PAYLOAD, data->zigbee_device_state & 0x0C? ENERGY_STATUS_NORMAL : ENERGY_STATUS_TAMPERED, NULL);
         }
         else
         {
